@@ -1,3 +1,29 @@
-## **Application Development**
+# Hybrid Library Documentation
 
-* ### [Documentation](https://abitofhelp.github.io/docs_lib/)
+Shared documentation for hybrid library projects.
+
+## Quick Start
+
+- [Quick Start Guide](./quick_start.md)
+
+## Formal Documentation
+
+- [Software Requirements Specification](./formal/software_requirements_specification.md)
+- [Software Design Specification](./formal/software_design_specification.md)
+- [Software Test Guide](./formal/software_test_guide.md)
+
+## Guides
+
+- [All About Our API](./guides/all_about_our_api.md)
+- [Architecture Enforcement](./guides/architecture_enforcement.md)
+- [Build Profiles](./guides/build_profiles.md)
+- [Error Handling Strategy](./guides/error_handling_strategy.md)
+
+## Diagrams
+
+- [API Re-export Pattern](./diagrams/api_reexport_pattern.svg)
+- [Error Handling Flow](./diagrams/error_handling_flow.svg)
+- [Layer Dependencies](./diagrams/layer_dependencies.svg)
+- [Package Structure](./diagrams/package_structure.svg)
+- [Static Dispatch](./diagrams/static_dispatch.svg)
+- [Three Package API](./diagrams/three_package_api.svg)
