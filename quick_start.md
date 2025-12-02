@@ -253,4 +253,4 @@ The library uses strict style checking. Warnings about line length are informati
 ## Next Steps
 
 - Read [All About Our API](guides/all_about_our_api.md) for API architecture
-- Review [Software Design Specification](formal/software_design_specification.md) for internals
+- Review [Software Design Specification](templates/software_design_specification.md) for internals
