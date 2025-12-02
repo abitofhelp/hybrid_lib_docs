@@ -1,11 +1,11 @@
 # Build Profiles
 
-**Version:** 1.0.0<br>
-**Date:** November 29, 2025<br>
+**Version:** 1.0.0  
+**Date:** December 01, 2025  
 **SPDX-License-Identifier:** BSD-3-Clause<br>
 **License File:** See the LICENSE file in the project root<br>
-**Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>
-**Status:** Released
+**Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>  
+**Status:** Released  
 
 This document explains how to build the library for different target platforms.
 
@@ -110,8 +110,8 @@ end Hybrid_Lib_Ada_Config;
 ## Adding a New Profile
 
 1. Create directory: `config/profiles/<profile_name>/`
-2. Create config file: `hybrid_lib_ada_config.ads` with appropriate values
-3. Add the profile to the `Profile_Type` in `hybrid_lib_ada.gpr`
+2. Create config file: `<project>_config.ads` with appropriate values
+3. Add the profile to the `Profile_Type` in `<project>.gpr`
 4. Add the `case` branch for Source_Dirs
 5. Update the PROFILES list in `Makefile` build-profiles target
 

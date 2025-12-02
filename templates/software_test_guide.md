@@ -503,7 +503,7 @@ See [All About Our API - Testing with Mock Composition Root](../guides/all_about
 
 | Element | Convention | Example |
 |---------|------------|---------|
-| Test file | `test_<package>.adb` | `test_domain_person.adb` |
+| Test file | `test_<package>.adb` | `test_<layer>_<entity>.adb` |
 | Test name | Descriptive, action-result | "Create valid name - Is_Ok" |
 | Mock prefix | `Mock_` | `Mock_Writer_Success` |
 | Runner | `<category>_runner.adb` | `unit_runner.adb` |
