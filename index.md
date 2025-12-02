@@ -21,9 +21,19 @@ Shared documentation for hybrid library projects.
 
 ## Diagrams
 
-- [API Re-export Pattern](./diagrams/api_reexport_pattern.svg)
-- [Error Handling Flow](./diagrams/error_handling_flow.svg)
+### Language-Agnostic
 - [Layer Dependencies](./diagrams/layer_dependencies.svg)
-- [Package Structure](./diagrams/package_structure.svg)
-- [Static Dispatch](./diagrams/static_dispatch.svg)
-- [Three Package API](./diagrams/three_package_api.svg)
+
+### Ada Examples
+- [API Re-export Pattern (Ada)](./diagrams/ada/api_reexport_pattern_ada.svg)
+- [Error Handling Flow (Ada)](./diagrams/ada/error_handling_flow_ada.svg)
+- [Package Structure (Ada)](./diagrams/ada/package_structure_ada.svg)
+- [Static Dispatch (Ada)](./diagrams/ada/static_dispatch_ada.svg)
+- [Three Package API (Ada)](./diagrams/ada/three_package_api_ada.svg)
+
+### Go Examples
+- [API Re-export Pattern (Go)](./diagrams/go/api_reexport_pattern_go.svg)
+- [Error Handling Flow (Go)](./diagrams/go/error_handling_flow_go.svg)
+- [Package Structure (Go)](./diagrams/go/package_structure_go.svg)
+- [Static Dispatch (Go)](./diagrams/go/static_dispatch_go.svg)
+- [Three Package API (Go)](./diagrams/go/three_package_api_go.svg)
