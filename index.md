@@ -1,11 +1,11 @@
 # Hybrid Library Documentation
 
-**Version:** 1.0.0  
-**Date:** December 02, 2025  
-**SPDX-License-Identifier:** BSD-3-Clause  
-**License File:** See the LICENSE file in the project root.  
-**Copyright:** (c) 2025 Michael Gardner, A Bit of Help, Inc.  
-**Status:** Released  
+**Version:** 1.0.0
+**Date:** December 02, 2025
+**SPDX-License-Identifier:** BSD-3-Clause
+**License File:** See the LICENSE file in the project root.
+**Copyright:** (c) 2025 Michael Gardner, A Bit of Help, Inc.
+**Status:** Released
 
 
 Shared documentation for hybrid library projects.
@@ -30,7 +30,7 @@ Shared documentation for hybrid library projects.
 ## Diagrams
 
 ### Language-Agnostic
-- [Layer Dependencies](./diagrams/layer_dependencies.svg)
+- [Library Architecture](./diagrams/library_architecture.svg)
 
 ### Ada Examples
 - [API Re-export Pattern (Ada)](./diagrams/ada/api_reexport_pattern_ada.svg)
