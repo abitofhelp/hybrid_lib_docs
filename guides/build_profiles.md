@@ -136,6 +136,40 @@ Or build with:
 alr exec -- gprbuild -gnatec=path/to/restrictions.adc
 ```
 
+## Linking with Tasking Dependencies
+
+If your library depends on a crate that uses **protected objects** or other Ada tasking features (e.g., `gnatcoll`, `tzif`), executables linking against your library must include the tasking runtime.
+
+### Symptom
+
+Undefined linker symbols like:
+```
+___gnat_tasking_runtime_initialize
+_system__tasking__protected_objects_E
+_system__tasking__protected_objects__entries_E
+```
+
+### Solution
+
+Add `-lgnarl` to the linker switches in your executable's GPR file:
+
+```ada
+package Linker is
+   --  Link against tasking runtime (required by protected objects)
+   for Default_Switches ("Ada") use ("-lgnarl");
+end Linker;
+```
+
+### When This Applies
+
+- Your library depends on `gnatcoll` (uses protected types internally)
+- Your library depends on `tzif` (uses protected types for thread-safe caching)
+- Your library uses `protected` types or tasks directly
+
+### Note
+
+This is only needed for **executables** (examples, tests, apps). The library itself builds fine - the issue appears at link time when creating the final executable.
+
 ## See Also
 
 - [Alire documentation](https://alire.ada.dev/docs/)
