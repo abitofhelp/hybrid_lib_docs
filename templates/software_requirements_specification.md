@@ -1,10 +1,10 @@
-# Software Requirements Specification
+# Software Requirements Specification (SRS)
 
-**Version:** 1.0.0<br>
-**Date:** 2025-11-29<br>
+**Version:** 1.0.0
+**Date:** December 08, 2025
 **SPDX-License-Identifier:** BSD-3-Clause<br>
 **License File:** See the LICENSE file in the project root<br>
-**Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>
+**Copyright:** 2025 Michael Gardner, A Bit of Help, Inc.<br>
 **Status:** Released
 
 ---
@@ -24,15 +24,15 @@ Hybrid_Lib_Ada provides:
 - SPARK-compatible design for formal verification
 - Embedded-safe patterns (no heap allocation)
 
-### 1.3 Definitions
+### 1.3 Definitions and Acronyms
 
 | Term | Definition |
 |------|------------|
-| **DDD** | Domain-Driven Design - strategic and tactical patterns for complex software |
-| **Hexagonal Architecture** | Ports & Adapters pattern isolating business logic from infrastructure |
-| **Result Monad** | Functional pattern for error handling without exceptions |
-| **SPARK** | Ada subset for formal verification |
-| **Value Object** | Immutable domain object defined by its attributes |
+| DDD | Domain-Driven Design - strategic and tactical patterns for complex software |
+| Hexagonal Architecture | Ports & Adapters pattern isolating business logic from infrastructure |
+| Result Monad | Functional pattern for error handling without exceptions |
+| SPARK | Ada subset for formal verification |
+| Value Object | Immutable domain object defined by its attributes |
 
 ### 1.4 References
 
@@ -47,7 +47,7 @@ Hybrid_Lib_Ada provides:
 
 ### 2.1 Product Perspective
 
-Hybrid_Lib_Ada is a standalone library designed to be imported by Ada applications. It provides:
+Hybrid_Lib_Ada is a standalone library designed to be imported by Ada applications implementing hexagonal (ports and adapters) architecture with clean separation between domain logic, application use cases, and infrastructure adapters.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -66,23 +66,41 @@ Hybrid_Lib_Ada is a standalone library designed to be imported by Ada applicatio
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 Product Functions
+**Architecture Layers:**
 
-| Function | Description |
-|----------|-------------|
-| **Greet** | Generate and output a personalized greeting |
-| **Create_Person** | Create validated Person value object |
-| **Create_Greet_Command** | Create command for greet operation |
+| Layer | Purpose |
+|-------|---------|
+| Domain | Pure business logic, value objects, error types |
+| Application | Use cases, commands, ports (interfaces) |
+| Infrastructure | Adapters for I/O operations |
+| API | Public facade with stable interface |
 
-### 2.3 User Characteristics
+### 2.2 Product Features
 
-| User Type | Characteristics |
-|-----------|-----------------|
-| **Library Consumer** | Ada developer integrating greeting functionality |
-| **Architecture Student** | Learning hexagonal architecture in Ada |
-| **Embedded Developer** | Requiring heap-free, SPARK-compatible patterns |
+1. **Greeting Operations**: Generate personalized greetings via clean architecture
+2. **Domain Modeling**: Person value object with validation
+3. **Error Handling**: Railway-oriented programming with Result monads
+4. **Platform Abstraction**: Generic I/O plugin pattern for portability
+5. **Formal Verification**: SPARK-compatible domain layer
 
-### 2.4 Constraints
+### 2.3 User Classes
+
+| User Class | Description |
+|------------|-------------|
+| Library Consumers | Ada developers integrating library functionality |
+| Architecture Students | Learning hexagonal architecture in Ada |
+| Embedded Developers | Requiring heap-free, SPARK-compatible patterns |
+
+### 2.4 Operating Environment
+
+| Requirement | Specification |
+|-------------|---------------|
+| Platforms | POSIX (Linux, macOS, BSD), Windows 11, Embedded |
+| Ada Compiler | GNAT FSF 13+ or GNAT Pro |
+| Ada Version | Ada 2022 |
+| Dependencies | functional ^3.0.0 |
+
+### 2.5 Constraints
 
 | Constraint | Rationale |
 |------------|-----------|
@@ -91,184 +109,213 @@ Hybrid_Lib_Ada is a standalone library designed to be imported by Ada applicatio
 | No Heap Allocation | Embedded system compatibility |
 | SPARK Subset | Formal verification capability |
 
-### 2.5 Assumptions and Dependencies
-
-- Alire 2.0+ available for dependency management
-- `functional` crate available (Result monad implementation)
-- GNAT toolchain installed via Alire
-
 ---
 
 ## 3. Functional Requirements
 
-### 3.1 Domain Layer Requirements
+### 3.1 Domain Layer (FR-01)
 
-#### REQ-DOM-001: Person Value Object
+**Priority**: High
+**Description**: Provide core domain entities and value objects.
 
-**Description:** The system SHALL provide a Person value object representing a named individual.
+| ID | Requirement |
+|----|-------------|
+| FR-01.1 | Person value object with bounded name (1-100 characters) |
+| FR-01.2 | Person is immutable after creation |
+| FR-01.3 | Empty names rejected with Validation_Error |
+| FR-01.4 | Structured error types with Kind enumeration and Message |
+| FR-01.5 | Result monad for all fallible operations |
+| FR-01.6 | Error Kinds: Validation_Error, Parse_Error, Not_Found_Error, IO_Error, Internal_Error |
 
-**Acceptance Criteria:**
-- Person is immutable after creation
-- Person name is validated on creation
-- Name length is bounded (1 to 100 characters)
-- Empty names are rejected with Validation_Error
-
-#### REQ-DOM-002: Error Types
-
-**Description:** The system SHALL define structured error types for all failure modes.
-
-**Acceptance Criteria:**
-- Error includes Kind enumeration
-- Error includes human-readable Message
-- Error Kinds: Validation_Error, IO_Error, Not_Found_Error, Already_Exists_Error, Config_Error, Internal_Error
-
-#### REQ-DOM-003: Result Monad
-
-**Description:** The system SHALL use Result[T] for all fallible operations.
-
-**Acceptance Criteria:**
+**Acceptance Criteria (FR-01):**
+- Person value object validates name on creation
 - Result is either Ok(value) or Error(error_info)
 - No exceptions raised for expected errors
 - Type-safe value extraction
 
-### 3.2 Application Layer Requirements
+### 3.2 Application Layer (FR-02)
 
-#### REQ-APP-001: Greet Command
+**Priority**: High
+**Description**: Provide use cases and port definitions.
 
-**Description:** The system SHALL provide a Greet_Command data transfer object.
+| ID | Requirement |
+|----|-------------|
+| FR-02.1 | Greet_Command data transfer object for greeting requests |
+| FR-02.2 | Greet use case orchestrating greeting workflow |
+| FR-02.3 | Writer outbound port for output operations |
+| FR-02.4 | Static polymorphism via generic function signatures |
+| FR-02.5 | Returns Result[Unit] for all operations |
 
-**Acceptance Criteria:**
-- Encapsulates name for greeting
-- Immutable after creation
-- No validation (thin DTO)
-
-#### REQ-APP-002: Greet Use Case
-
-**Description:** The system SHALL provide a Greet use case orchestrating the greeting workflow.
-
-**Acceptance Criteria:**
-- Accepts Greet_Command
-- Creates Person from command name
-- Generates greeting message
-- Writes message via Writer port
-- Returns Result[Unit]
-
-#### REQ-APP-003: Writer Port
-
-**Description:** The system SHALL define an output port for write operations.
-
-**Acceptance Criteria:**
-- Generic function signature: Write(Message) -> Result[Unit]
+**Acceptance Criteria (FR-02):**
+- Greet_Command encapsulates name, is immutable after creation
+- Greet use case: accepts command, creates Person, generates greeting, writes via port
+- Writer port: Generic signature Write(Message) -> Result[Unit]
 - Port is Application-owned, Infrastructure-implemented
-- Static polymorphism via generics
 
-### 3.3 Infrastructure Layer Requirements
+### 3.3 Infrastructure Layer (FR-03)
 
-#### REQ-INF-001: Console Writer Adapter
+**Priority**: High
+**Description**: Provide platform-specific adapters implementing ports.
 
-**Description:** The system SHALL provide a Console_Writer adapter.
+| ID | Requirement |
+|----|-------------|
+| FR-03.1 | Console_Writer adapter for standard output |
+| FR-03.2 | Implements Writer port contract |
+| FR-03.3 | Returns Ok on success, IO_Error on failure |
 
-**Acceptance Criteria:**
-- Implements Writer port contract
-- Writes to standard output
-- Returns Ok on success
-- Returns IO_Error on failure
+**Acceptance Criteria (FR-03):**
+- Console_Writer writes to standard output
+- All I/O errors captured and returned as Result
 
-### 3.4 API Layer Requirements
+### 3.4 API Layer (FR-04)
 
-#### REQ-API-001: Public Facade
+**Priority**: High
+**Description**: Provide stable public interface.
 
-**Description:** The system SHALL provide a thin public facade for library consumers.
+| ID | Requirement |
+|----|-------------|
+| FR-04.1 | Single `Hybrid_Lib_Ada.API` package for imports |
+| FR-04.2 | Re-exports Domain types (Person, Error, Unit) |
+| FR-04.3 | Re-exports Application types (Greet_Command, Unit_Result) |
+| FR-04.4 | API.Operations with SPARK_Mode(On) for verifiable logic |
+| FR-04.5 | API.Desktop composition root wiring Console_Writer |
 
-**Acceptance Criteria:**
-- Single `Hybrid_Lib_Ada.API` package for imports
-- Re-exports Domain types (Person, Error, Unit)
-- Re-exports Application types (Greet_Command, Unit_Result)
-- Provides Greet function
+**Acceptance Criteria (FR-04):**
+- API.Operations is generic, parameterized by Writer port
+- No Infrastructure dependencies in Operations
+- API.Desktop wires Console_Writer, uses SPARK_Mode(Off) for I/O wiring
 
-#### REQ-API-002: SPARK-Safe Operations
+### 3.5 Error Handling (FR-05)
 
-**Description:** The system SHALL provide SPARK-verifiable operations.
+**Priority**: High
+**Description**: Railway-oriented error handling without exceptions.
 
-**Acceptance Criteria:**
-- API.Operations package with SPARK_Mode(On)
-- Generic, parameterized by Writer port
-- No Infrastructure dependencies
-- Formally verifiable business logic
-
-#### REQ-API-003: Composition Root
-
-**Description:** The system SHALL provide platform-specific composition roots.
-
-**Acceptance Criteria:**
-- API.Desktop wires Console_Writer
-- SPARK_Mode(Off) for I/O wiring
-- Instantiates API.Operations with concrete adapter
+| ID | Requirement |
+|----|-------------|
+| FR-05.1 | Use Result monad for all fallible operations |
+| FR-05.2 | Provide descriptive error messages |
+| FR-05.3 | Error codes for all failure modes |
+| FR-05.4 | No exceptions in library code |
 
 ---
 
 ## 4. Non-Functional Requirements
 
-### 4.1 Performance
+### 4.1 Performance (NFR-01)
 
-| Requirement | Target |
-|-------------|--------|
-| Greet operation latency | < 1ms (excluding I/O) |
-| Memory allocation | Zero heap allocation |
-| Stack usage | < 4KB per call |
+| ID | Requirement |
+|----|-------------|
+| NFR-01.1 | Operation latency < 1ms (excluding I/O) |
+| NFR-01.2 | Zero heap allocation |
+| NFR-01.3 | Stack usage < 4KB per call |
 
-### 4.2 Reliability
+### 4.2 Reliability (NFR-02)
 
-| Requirement | Description |
-|-------------|-------------|
-| Error handling | All errors returned via Result, no exceptions |
-| Input validation | All inputs validated at domain boundary |
-| Crash safety | No uncaught exceptions possible |
+| ID | Requirement |
+|----|-------------|
+| NFR-02.1 | All errors returned via Result monad, no exceptions |
+| NFR-02.2 | All inputs validated at domain boundary |
+| NFR-02.3 | No uncaught exceptions possible |
 
-### 4.3 Portability
+### 4.3 Portability (NFR-03)
 
-| Requirement | Description |
-|-------------|-------------|
-| Compiler | GNAT 14+ |
-| Platforms | Linux, macOS, Windows |
-| Embedded | Ravenscar-compatible design |
-| Bare-metal | Zero-footprint runtime option |
+| ID | Requirement |
+|----|-------------|
+| NFR-03.1 | Support POSIX platforms (Linux, macOS, BSD) |
+| NFR-03.2 | Support Windows platforms |
+| NFR-03.3 | Support embedded platforms via custom adapters |
+| NFR-03.4 | No platform-specific code in domain layer |
+| NFR-03.5 | No infrastructure types exposed in application layer ports |
+| NFR-03.6 | Platform adapters selectable via GPR configuration |
 
-### 4.4 Maintainability
+### 4.4 Maintainability (NFR-04)
 
-| Requirement | Description |
-|-------------|-------------|
-| Architecture | 4-layer hexagonal (Domain/Application/Infrastructure/API) |
-| Coupling | Inward dependencies only |
-| Testing | Unit tests for each layer |
-| Documentation | Full API and architecture documentation |
+| ID | Requirement |
+|----|-------------|
+| NFR-04.1 | Hexagonal architecture with clear boundaries |
+| NFR-04.2 | Comprehensive documentation (docstrings) |
+| NFR-04.3 | > 90% test coverage |
+| NFR-04.4 | Zero compiler warnings |
 
-### 4.5 Security
+### 4.5 Usability (NFR-05)
 
-| Requirement | Description |
-|-------------|-------------|
-| Input validation | Bounded strings prevent buffer overflow |
-| No dynamic memory | Prevents use-after-free, double-free |
-| SPARK compatible | Enables formal verification |
+| ID | Requirement |
+|----|-------------|
+| NFR-05.1 | Clear, intuitive API |
+| NFR-05.2 | Working examples for all use cases |
+| NFR-05.3 | Comprehensive error messages |
+
+### 4.6 Platform Abstraction (NFR-06)
+
+| ID | Requirement |
+|----|-------------|
+| NFR-06.1 | Application layer defines abstract outbound ports using pure function signatures |
+| NFR-06.2 | Infrastructure layer provides platform-specific adapters implementing ports |
+| NFR-06.3 | Composition roots (API.Desktop, API.Windows, API.Embedded) wire adapters to ports |
+| NFR-06.4 | Domain types used in port signatures, not infrastructure types |
+| NFR-06.5 | New platforms addable without modifying application layer |
+| NFR-06.6 | All platform adapters testable via mock implementations |
+
+### 4.7 SPARK Formal Verification (NFR-07)
+
+| ID | Requirement |
+|----|-------------|
+| NFR-07.1 | Domain layer shall pass SPARK legality checking |
+| NFR-07.2 | All domain packages shall use `SPARK_Mode => On` |
+| NFR-07.3 | No runtime errors provable in domain layer (overflow, range, division) |
+| NFR-07.4 | All domain variables shall be properly initialized before use |
+| NFR-07.5 | Pre/postconditions on domain operations shall be proven correct |
+| NFR-07.6 | SPARK legality verification shall be runnable via `make spark-check` |
+| NFR-07.7 | SPARK proof verification shall be runnable via `make spark-prove` |
+| NFR-07.8 | Infrastructure/API layers may use `SPARK_Mode => Off` for I/O operations |
+
+**Verification Scope:**
+
+| Layer | SPARK_Mode | Rationale |
+|-------|-----------|-----------|
+| Domain | On | Pure business logic, provable |
+| Application | On | Operations, inbound ports, outbound ports |
+| Infrastructure | Off | I/O operations |
+| API | Off | Facade over infrastructure |
 
 ---
 
-## 5. Interface Requirements
+## 5. System Requirements
 
-### 5.1 User Interfaces
+### 5.1 Hardware Requirements
+
+| Category | Requirement |
+|----------|-------------|
+| CPU | Any modern processor |
+| RAM | 64 MB minimum |
+| Disk | 10 MB minimum |
+
+### 5.2 Software Requirements
+
+| Category | Requirement |
+|----------|-------------|
+| Operating System | Linux, macOS, BSD, Windows 11 |
+| Compiler | GNAT FSF 13+ or GNAT Pro |
+| Build System | Alire 2.0+ |
+
+---
+
+## 6. Interface Requirements
+
+### 6.1 User Interfaces
 
 None - this is a library, not an application.
 
-### 5.2 Software Interfaces
+### 6.2 Software Interfaces
 
-#### 5.2.1 Alire Integration
+#### 6.2.1 Alire Integration
 
 ```toml
 [[depends-on]]
 hybrid_lib_ada = "*"
 ```
 
-#### 5.2.2 Ada API
+#### 6.2.2 Ada API
 
 ```ada
 with Hybrid_Lib_Ada.API;
@@ -278,37 +325,65 @@ Cmd    : constant Greet_Command := Create_Greet_Command ("Name");
 Result : constant Unit_Result.Result := Greet (Cmd);
 ```
 
-### 5.3 Hardware Interfaces
+### 6.3 Hardware Interfaces
 
 None specified - library is hardware-agnostic.
 
 ---
 
-## 6. Traceability Matrix
+## 7. Verification and Validation
+
+### 7.1 Verification Methods
+
+| Method | Description |
+|--------|-------------|
+| Code Review | All code reviewed before merge |
+| Static Analysis | Zero compiler warnings |
+| Dynamic Testing | All tests must pass |
+| Coverage Analysis | > 90% line coverage |
+
+### 7.2 Traceability Matrix
 
 | Requirement | Design | Test |
 |-------------|--------|------|
-| REQ-DOM-001 | Domain.Value_Object.Person | test_domain_person.adb |
-| REQ-DOM-002 | Domain.Error | test_domain_error_result.adb |
-| REQ-DOM-003 | Domain.Error.Result | test_domain_error_result.adb |
-| REQ-APP-001 | Application.Command.Greet | test_application_command_greet.adb |
-| REQ-APP-002 | Application.Usecase.Greet | test_application_usecase_greet.adb |
-| REQ-APP-003 | Application.Port.Outbound.Writer | test_application_usecase_greet.adb |
-| REQ-INF-001 | Infrastructure.Adapter.Console_Writer | test_api_greet.adb |
-| REQ-API-001 | Hybrid_Lib_Ada.API | test_api_greet.adb |
-| REQ-API-002 | Hybrid_Lib_Ada.API.Operations | test_api_operations.adb |
-| REQ-API-003 | Hybrid_Lib_Ada.API.Desktop | test_api_greet.adb |
+| FR-01.1 | Domain.Value_Object.Person | test_domain_person.adb |
+| FR-01.4 | Domain.Error | test_domain_error_result.adb |
+| FR-01.5 | Domain.Error.Result | test_domain_error_result.adb |
+| FR-02.1 | Application.Command.Greet | test_application_command_greet.adb |
+| FR-02.2 | Application.Usecase.Greet | test_application_usecase_greet.adb |
+| FR-02.3 | Application.Port.Outbound.Writer | test_application_usecase_greet.adb |
+| FR-03.1 | Infrastructure.Adapter.Console_Writer | test_api_greet.adb |
+| FR-04.1 | Hybrid_Lib_Ada.API | test_api_greet.adb |
+| FR-04.4 | Hybrid_Lib_Ada.API.Operations | test_api_operations.adb |
+| FR-04.5 | Hybrid_Lib_Ada.API.Desktop | test_api_greet.adb |
 
 ---
 
-## 7. Appendices
+## 8. Appendices
 
-### A. Glossary
+### 8.1 Glossary
 
-See Section 1.3 Definitions.
+See Section 1.3 Definitions and Acronyms.
 
-### B. Change History
+### 8.2 Project Statistics
+
+| Metric | Value |
+|--------|-------|
+| Ada specification files | TBD |
+| Ada implementation files | TBD |
+| Architecture layers | 4 (Domain, Application, Infrastructure, API) |
+| Unit tests | TBD |
+| Integration tests | TBD |
+
+---
+
+**Document Control:**
+- Version: 1.0.0
+- Last Updated: December 08, 2025
+- Status: Released
+
+**Change History:**
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0.0 | 2025-11-29 | Michael Gardner | Initial release |
+| 1.0.0 | 2025-12-08 | Michael Gardner | Aligned with tzif SRS structure; added NFR-06, NFR-07 |

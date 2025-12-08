@@ -1,29 +1,62 @@
-# Quick Start Guide
+# Hybrid Library Quick Start Guide
 
-**Version:** 1.0.0  
-**Date:** December 02, 2025  
+**Version:** 1.0.0
+**Date:** December 08, 2025
 **SPDX-License-Identifier:** BSD-3-Clause<br>
 **License File:** See the LICENSE file in the project root<br>
-**Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>  
-**Status:** Released  
+**Copyright:** 2025 Michael Gardner, A Bit of Help, Inc.<br>
+**Status:** Released
 
 ---
 
-## Prerequisites
+## Table of Contents
+
+- [Installation](#installation)
+- [First Program](#first-program)
+- [Working with Person Values](#working-with-person-values)
+- [Error Handling](#error-handling)
+- [Running Tests](#running-tests)
+- [Build Profiles](#build-profiles)
+- [Common Issues](#common-issues)
+
+---
+
+## Installation
+
+### Using Alire (Recommended)
+
+```bash
+# Add hybrid_lib_ada to your project
+alr with hybrid_lib_ada
+
+# Or get hybrid_lib_ada standalone
+alr get hybrid_lib_ada
+cd hybrid_lib_ada_*
+alr build
+```
+
+### Manual Installation
+
+```bash
+git clone --recurse-submodules https://github.com/abitofhelp/hybrid_lib_ada.git
+cd hybrid_lib_ada
+alr build
+```
+
+### Prerequisites
 
 - **Alire** 2.0+ (Ada package manager)
 - **GNAT** 14+ (via Alire toolchain)
 - **Make** (for convenience targets)
 
-### Installing Alire
+#### Installing Alire
 
 ```bash
 # macOS (Homebrew)
 brew install alire
 
-# Linux (download latest from https://alire.ada.dev/docs/#installation)
-# Visit releases page: https://github.com/alire-project/alire/releases
-# Download the appropriate binary for your platform and add to PATH
+# Linux - download from https://alire.ada.dev/docs/#installation
+# Visit: https://github.com/alire-project/alire/releases
 
 # Verify installation
 alr --version
@@ -31,54 +64,15 @@ alr --version
 
 ---
 
-## Building the Library
+## First Program
 
-### Clone and Build
-
-```bash
-# Clone the repository
-git clone https://github.com/abitofhelp/hybrid_lib_ada.git
-cd hybrid_lib_ada
-
-# Build with Alire
-alr build
-
-# Or with Make
-make build
-```
-
-### Build Output
-
-```
-lib/libhybrid_lib_ada.a    # Static library
-```
-
----
-
-## Using the Library
-
-### Add as Dependency
-
-In your project's `alire.toml`:
-
-```toml
-[[depends-on]]
-hybrid_lib_ada = "*"
-```
-
-Then:
-
-```bash
-alr update
-alr build
-```
-
-### Basic Usage
+Create a simple program to generate a greeting:
 
 ```ada
+with Ada.Text_IO; use Ada.Text_IO;
 with Hybrid_Lib_Ada.API;
 
-procedure Greet_Example is
+procedure My_First_Greeting is
    use Hybrid_Lib_Ada.API;
 
    --  Create a greet command
@@ -88,22 +82,35 @@ procedure Greet_Example is
    Result : constant Unit_Result.Result := Greet (Cmd);
 begin
    if Unit_Result.Is_Ok (Result) then
-      --  Success! "Hello, Alice!" was written to console
-      null;
+      Put_Line ("Greeting succeeded!");
    else
-      --  Handle error
-      declare
-         Info : constant Error_Type := Unit_Result.Error_Info (Result);
-      begin
-         Ada.Text_IO.Put_Line ("Error: " & Error_Strings.To_String (Info.Message));
-      end;
+      Put_Line ("Greeting failed");
    end if;
-end Greet_Example;
+end My_First_Greeting;
 ```
 
-### Working with Person Values
+**Build and Run:**
+
+```bash
+alr build
+./bin/my_first_greeting
+```
+
+**Expected Output:**
+
+```text
+Hello, Alice!
+Greeting succeeded!
+```
+
+---
+
+## Working with Person Values
+
+Create and validate Person value objects:
 
 ```ada
+with Ada.Text_IO; use Ada.Text_IO;
 with Hybrid_Lib_Ada.API;
 
 procedure Person_Example is
@@ -116,19 +123,71 @@ begin
       declare
          P : constant Person_Type := Person_Result.Value (Result);
       begin
-         Ada.Text_IO.Put_Line ("Created person: " & Get_Name (P));
+         Put_Line ("Created person: " & Get_Name (P));
       end;
    else
       --  Validation failed (empty name, too long, etc.)
       declare
          Info : constant Error_Type := Person_Result.Error_Info (Result);
       begin
-         Ada.Text_IO.Put_Line ("Validation error: " &
+         Put_Line ("Validation error: " &
            Error_Strings.To_String (Info.Message));
       end;
    end if;
 end Person_Example;
 ```
+
+---
+
+## Error Handling
+
+Hybrid_Lib_Ada uses the Result monad pattern - no exceptions are raised.
+
+### Pattern 1: Check Success/Failure
+
+```ada
+Result : constant Unit_Result.Result := Greet (Cmd);
+
+if Unit_Result.Is_Ok (Result) then
+   --  Success path
+   Put_Line ("Operation succeeded");
+else
+   --  Error path
+   Put_Line ("Operation failed");
+end if;
+```
+
+### Pattern 2: Extract Error Info
+
+```ada
+Result : constant Person_Result.Result := Create_Person ("");
+
+if Unit_Result.Is_Error (Result) then
+   declare
+      Info : constant Error_Type := Person_Result.Error_Info (Result);
+   begin
+      Put_Line ("Error kind: " & Info.Kind'Image);
+      Put_Line ("Message: " & Error_Strings.To_String (Info.Message));
+   end;
+end if;
+```
+
+### Error Kinds
+
+| Kind | Description |
+|------|-------------|
+| `Validation_Error` | Input validation failed (empty name, too long) |
+| `Parse_Error` | Malformed data or parsing failure |
+| `Not_Found_Error` | Requested resource not found |
+| `IO_Error` | Infrastructure I/O operation failed |
+| `Internal_Error` | Unexpected internal error (bug) |
+
+**Why No Exceptions?**
+
+- Explicit error paths enforced by compiler
+- SPARK compatible for formal verification
+- Deterministic timing (no stack unwinding)
+- Errors are values that can be passed and transformed
 
 ---
 
@@ -144,15 +203,15 @@ make test-all
 
 ```bash
 # Unit tests only
-./test/bin/unit_runner
+make test-unit
 
 # Integration tests only
-./test/bin/integration_runner
+make test-integration
 ```
 
 ### Expected Output
 
-```
+```text
 ========================================
      HYBRID_LIB_ADA UNIT TEST SUITE
 ========================================
@@ -189,62 +248,29 @@ See [Build Profiles](guides/build_profiles.md) for detailed configuration.
 
 ---
 
-## Error Handling
-
-The library uses functional error handling via Result monad:
-
-```ada
---  All operations return Result[T] instead of raising exceptions
---  Result is either Ok(value) or Error(error_info)
-
-if Unit_Result.Is_Ok (Result) then
-   --  Success path: extract value
-   Value := Unit_Result.Value (Result);
-else
-   --  Error path: extract error info
-   Info := Unit_Result.Error_Info (Result);
-   --  Info.Kind: Validation_Error, IO_Error, etc.
-   --  Info.Message: Human-readable error description
-end if;
-```
-
-### Error Kinds
-
-| Kind | Description |
-|------|-------------|
-| `Validation_Error` | Input validation failed (empty name, too long) |
-| `IO_Error` | Infrastructure I/O operation failed |
-| `Not_Found_Error` | Requested resource not found |
-| `Already_Exists_Error` | Resource already exists |
-| `Config_Error` | Configuration/setup error |
-| `Internal_Error` | Unexpected internal error |
-
----
-
 ## Common Issues
 
-### Build Fails with "functional.gpr not found"
+### Q: Build fails with "functional.gpr not found"
 
-The library depends on the `functional` crate. Ensure it's available:
+**A:** The library depends on the `functional` crate. Ensure it's available:
 
 ```bash
 alr update
 ```
 
-### Tests Not Found
+### Q: Tests not found
 
-Build tests first:
+**A:** Build tests first:
 
 ```bash
-alr exec -- gprbuild -P test/unit/unit_tests.gpr
-alr exec -- gprbuild -P test/integration/integration_tests.gpr
+cd test && alr build
 ```
 
-### Style Warnings
+### Q: Style warnings about line length
 
-The library uses strict style checking. Warnings about line length are informational:
+**A:** The library uses strict style checking. These warnings are informational:
 
-```
+```text
 (style) this line is too long: 85 [-gnatyM]
 ```
 
@@ -252,5 +278,12 @@ The library uses strict style checking. Warnings about line length are informati
 
 ## Next Steps
 
-- Read [All About Our API](guides/all_about_our_api.md) for API architecture
-- Review [Software Design Specification](templates/software_design_specification.md) for internals
+- **[Documentation Index](index.md)** - Complete documentation overview
+- **[All About Our API](guides/all_about_our_api.md)** - Three-package API pattern
+- **[Error Handling Strategy](guides/error_handling_strategy.md)** - Deep dive into Result monad
+- **[Architecture Enforcement](guides/architecture_enforcement.md)** - Layer dependency rules
+
+---
+
+**License:** BSD-3-Clause
+**Copyright:** 2025 Michael Gardner, A Bit of Help, Inc.
