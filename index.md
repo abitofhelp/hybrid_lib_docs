@@ -32,9 +32,9 @@ Shared documentation for hybrid library projects implementing hexagonal architec
 
 ### Formal Documentation
 
-- **[Software Requirements Specification](templates/software_requirements_specification.md)** - Functional and non-functional requirements
-- **[Software Design Specification](templates/software_design_specification.md)** - Architecture and detailed design
-- **[Software Test Guide](templates/software_test_guide.md)** - Testing strategy and execution
+- **[Software Requirements Specification](formal/software_requirements_specification.md)** - Functional and non-functional requirements
+- **[Software Design Specification](formal/software_design_specification.md)** - Architecture and detailed design
+- **[Software Test Guide](formal/software_test_guide.md)** - Testing strategy and execution
 
 ### Developer Guides
 
@@ -119,7 +119,7 @@ Hybrid libraries implement a 4-layer hexagonal architecture:
 ## Need Help?
 
 - Check the [Quick Start Guide](quick_start.md) for common issues
-- Review the [Software Test Guide](templates/software_test_guide.md) for testing help
+- Review the [Software Test Guide](formal/software_test_guide.md) for testing help
 - See [Error Handling Strategy](guides/error_handling_strategy.md) for Result monad usage
 
 ---
