@@ -40,39 +40,54 @@ This document covers:
 Hybrid_Lib_Ada uses a **4-layer library architecture** (Domain, Application, Infrastructure, API):
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        API Layer                             │
-│  Public facade + composition roots + SPARK operations        │
-│  src/api/                                                    │
-└─────────────────────────────┬───────────────────────────────┘
-                              │ depends on
-┌─────────────────────────────▼───────────────────────────────┐
-│                   Infrastructure Layer                       │
-│  Concrete adapters implementing ports                        │
-│  src/infrastructure/                                         │
-└─────────────────────────────┬───────────────────────────────┘
-                              │ implements
-┌─────────────────────────────▼───────────────────────────────┐
-│                    Application Layer                         │
-│  Use cases, commands, ports                                  │
-│  src/application/                                            │
-└─────────────────────────────┬───────────────────────────────┘
-                              │ depends on
-┌─────────────────────────────▼───────────────────────────────┐
-│                      Domain Layer                            │
-│  Pure business logic, value objects, errors                  │
-│  src/domain/                                                 │
-└─────────────────────────────────────────────────────────────┘
+        Consumer Application
+                ↓
+        ┌───────────────────────────────────────────────┐
+        │              API LAYER (Public Facade)        │
+        │  ┌─────────────────┬────────────────────────┐ │
+        │  │    api/         │    api/desktop/        │ │
+        │  │  (facade)       │  (composition root)    │ │
+        │  │  + operations/  │  Wires infrastructure  │ │
+        │  │                 │                        │ │
+        │  │  Depends on:    │  Depends on:           │ │
+        │  │  App + Domain   │  ALL layers            │ │
+        │  └─────────────────┴────────────────────────┘ │
+        └───────────────────────┬───────────────────────┘
+                                │
+        ┌───────────────────────▼───────────────────────┐
+        │              INFRASTRUCTURE LAYER             │
+        │  Adapters: Console_Writer                     │
+        │  Implements ports defined in Application      │
+        │  Depends on: Application + Domain             │
+        └───────────────────────┬───────────────────────┘
+                                │
+        ┌───────────────────────▼───────────────────────┐
+        │               APPLICATION LAYER               │
+        │  Use Cases: Greet | Commands: Greet_Command   │
+        │  Ports: Writer (outbound)                     │
+        │  Depends on: Domain only                      │
+        └───────────────────────┬───────────────────────┘
+                                │
+        ┌───────────────────────▼───────────────────────┐
+        │                 DOMAIN LAYER                  │
+        │  Value Objects: Person | Error: Result monad  │
+        │  Depends on: NOTHING (zero dependencies)      │
+        └───────────────────────────────────────────────┘
 ```
 
 ### 2.2 Dependency Rules
 
-| Layer | May Depend On |
-|-------|---------------|
+**Critical**: The API layer has TWO distinct areas with different dependency rules:
+
+| Component | May Depend On |
+|-----------|---------------|
 | Domain | Nothing (zero dependencies) |
 | Application | Domain only |
 | Infrastructure | Application, Domain |
-| API | All layers (composition root) |
+| **API facade (`api/`)** | **Application + Domain ONLY** |
+| **API composition roots (`api/desktop/`)** | ALL layers (including Infrastructure) |
+
+The API facade (`Hybrid_Lib_Ada.API`, `API.Operations`) re-exports types and provides the public interface but does NOT import Infrastructure. The composition root (`API.Desktop`) wires Infrastructure adapters to the generic Operations.
 
 ### 2.3 Hexagonal Pattern
 

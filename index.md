@@ -53,32 +53,39 @@ Documentation for **Hybrid_Lib_Ada** - a professional Ada 2022 library demonstra
 
 ## Architecture
 
-Hybrid_Lib_Ada implements a 4-layer hexagonal architecture:
+Hybrid_Lib_Ada implements a 4-layer hexagonal architecture with a two-part API layer:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                          API Layer                           │
-│  Hybrid_Lib_Ada.API (facade)                                │
-│  + API.Operations (SPARK-safe) + API.Desktop (composition)  │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│                   Infrastructure Layer                       │
-│  Adapters: Console_Writer                                   │
-│  Implements ports defined in Application layer              │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│                    Application Layer                         │
-│  Use Cases: Greet | Commands: Greet_Command                 │
-│  Ports: Writer (outbound)                                   │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│                      Domain Layer                            │
-│  Value Objects: Person, Option | Error: Result monad        │
-│  Pure business logic with zero dependencies                 │
-└─────────────────────────────────────────────────────────────┘
+        Consumer Application
+                ↓
+        ┌───────────────────────────────────────────────┐
+        │              API LAYER (Public Facade)        │
+        │  ┌─────────────────┬────────────────────────┐ │
+        │  │ API + Operations│    API.Desktop         │ │
+        │  │ (facade)        │  (composition root)    │ │
+        │  │                 │  Wires Infrastructure  │ │
+        │  │ Depends on:     │  Depends on:           │ │
+        │  │ App + Domain    │  ALL layers            │ │
+        │  └─────────────────┴────────────────────────┘ │
+        └───────────────────────────────────────────────┘
+                                │
+        ┌───────────────────────▼───────────────────────┐
+        │              INFRASTRUCTURE LAYER             │
+        │  Adapters: Console_Writer                     │
+        │  Depends on: Application + Domain             │
+        └───────────────────────┬───────────────────────┘
+                                │
+        ┌───────────────────────▼───────────────────────┐
+        │               APPLICATION LAYER               │
+        │  Use Cases: Greet | Commands | Ports          │
+        │  Depends on: Domain only                      │
+        └───────────────────────┬───────────────────────┘
+                                │
+        ┌───────────────────────▼───────────────────────┐
+        │                 DOMAIN LAYER                  │
+        │  Value Objects: Person | Error: Result monad  │
+        │  Depends on: NOTHING (zero dependencies)      │
+        └───────────────────────────────────────────────┘
 ```
 
 **Design Principles:**
@@ -86,7 +93,8 @@ Hybrid_Lib_Ada implements a 4-layer hexagonal architecture:
 - Dependencies flow inward (toward Domain)
 - Domain layer has zero external dependencies
 - Infrastructure implements ports defined in Application
-- API provides stable public interface via three-package pattern
+- **API facade depends on Application + Domain ONLY** (no Infrastructure)
+- **API.Desktop** is a composition root that wires Infrastructure
 - Generic I/O plugin pattern enables platform portability
 - Static dispatch via generics (zero runtime overhead)
 
