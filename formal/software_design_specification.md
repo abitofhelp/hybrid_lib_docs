@@ -1,7 +1,7 @@
 # Software Design Specification
 
-**Version:** 1.0.0<br>
-**Date:** 2025-11-29<br>
+**Version:** 2.0.0<br>
+**Date:** December 09, 2025<br>
 **SPDX-License-Identifier:** BSD-3-Clause<br>
 **License File:** See the LICENSE file in the project root<br>
 **Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>
@@ -496,4 +496,5 @@ Hybrid_Lib_Ada.API
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 2.0.0 | 2025-12-09 | Michael Gardner | Updated for v2.0.0: added examples, refactored Error_Kind enum, updated test counts |
 | 1.0.0 | 2025-11-29 | Michael Gardner | Initial release |

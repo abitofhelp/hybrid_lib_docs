@@ -1,7 +1,7 @@
 # Software Test Guide
 
-**Version:** 1.0.0<br>
-**Date:** 2025-11-29<br>
+**Version:** 2.0.0<br>
+**Date:** December 09, 2025<br>
 **SPDX-License-Identifier:** BSD-3-Clause<br>
 **License File:** See the LICENSE file in the project root<br>
 **Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>
@@ -38,9 +38,10 @@ This document covers:
 
 | Category | Location | Purpose | Count |
 |----------|----------|---------|-------|
-| Unit Tests | `test/unit/` | Test individual packages in isolation | 88 |
+| Unit Tests | `test/unit/` | Test individual packages in isolation | 99 |
 | Integration Tests | `test/integration/` | Test cross-layer interactions | 10 |
-| **Total** | | | **98** |
+| Example Programs | `examples/` | Runnable demonstrations of library usage | 2 |
+| **Total** | | | **109** |
 
 ### 2.2 Directory Structure
 
@@ -493,11 +494,88 @@ See [All About Our API - Testing with Mock Composition Root](../guides/all_about
 | Domain | test_domain_*.adb | 41 |
 | Application | test_application_*.adb | 33 |
 | API | test_api_*.adb | 24 |
-| **Total** | | **98** |
+| **Total** | | **109** |
 
 ---
 
-## 9. Appendices
+## 9. Example Programs
+
+Hybrid_Lib_Ada includes runnable example programs in the `examples/` directory that demonstrate library usage. These are not tests but educational demonstrations.
+
+### 9.1 Basic Greeting
+
+**File:** `examples/basic_greeting.adb`
+
+**Purpose:** Demonstrates the simplest library usage - create a command, execute it, check the result.
+
+**Build:**
+```bash
+alr build
+```
+
+**Run:**
+```bash
+./bin/basic_greeting
+```
+
+**Expected Output:**
+```
+=== Basic Greeting Example ===
+
+Hello, World!
+Greeting executed successfully!
+
+=== End Example ===
+```
+
+### 9.2 Error Handling
+
+**File:** `examples/error_handling.adb`
+
+**Purpose:** Demonstrates Result monad error handling with validation errors (empty name, name too long).
+
+**Build:**
+```bash
+alr build
+```
+
+**Run:**
+```bash
+./bin/error_handling
+```
+
+**Expected Output:**
+```
+=== Error Handling Example ===
+
+Test 1: Valid name 'Alice'
+Hello, Alice!
+  Result: OK - Greeting printed
+
+Test 2: Empty name ''
+  Result: ERROR - VALIDATION_ERROR: Name cannot be empty
+
+Test 3: Name too long (150 chars)
+  Result: ERROR - VALIDATION_ERROR: Name too long (max 100 characters)
+
+=== End Example ===
+```
+
+### 9.3 Building Examples
+
+Examples are built automatically with the library using `hybrid_lib_ada_internal.gpr`:
+
+```bash
+# Build all (library + tests + examples)
+alr build
+
+# Examples output to ./bin/
+ls -l bin/basic_greeting bin/error_handling
+```
+
+---
+
+## 10. Appendices
 
 ### A. Test Naming Conventions
 
@@ -512,4 +590,5 @@ See [All About Our API - Testing with Mock Composition Root](../guides/all_about
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 2.0.0 | 2025-12-09 | Michael Gardner | Updated for v2.0.0: added examples section, updated test counts (99+10), documented example programs |
 | 1.0.0 | 2025-11-29 | Michael Gardner | Initial release |

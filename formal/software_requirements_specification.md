@@ -1,10 +1,10 @@
 # Software Requirements Specification (SRS)
 
-**Version:** 1.0.0
-**Date:** December 08, 2025
+**Version:** 2.0.0<br>
+**Date:** December 09, 2025<br>
 **SPDX-License-Identifier:** BSD-3-Clause<br>
 **License File:** See the LICENSE file in the project root<br>
-**Copyright:** 2025 Michael Gardner, A Bit of Help, Inc.<br>
+**Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>
 **Status:** Released
 
 ---
@@ -369,21 +369,23 @@ See Section 1.3 Definitions and Acronyms.
 
 | Metric | Value |
 |--------|-------|
-| Ada specification files | TBD |
-| Ada implementation files | TBD |
+| Ada specification files | 16 |
+| Ada implementation files | 16 |
 | Architecture layers | 4 (Domain, Application, Infrastructure, API) |
-| Unit tests | TBD |
-| Integration tests | TBD |
+| Unit tests | 99 |
+| Integration tests | 10 |
+| Example programs | 2 (basic_greeting, error_handling) |
 
 ---
 
 **Document Control:**
-- Version: 1.0.0
-- Last Updated: December 08, 2025
+- Version: 2.0.0
+- Last Updated: December 09, 2025
 - Status: Released
 
 **Change History:**
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 2.0.0 | 2025-12-09 | Michael Gardner | Updated for v2.0.0: added examples, updated test counts (99+10), new Error_Kind values |
 | 1.0.0 | 2025-12-08 | Michael Gardner | Aligned with tzif SRS structure; added NFR-06, NFR-07 |

@@ -1,10 +1,10 @@
-# Hybrid Library Quick Start Guide
+# Hybrid_Lib_Ada Quick Start Guide
 
-**Version:** 1.0.0
-**Date:** December 08, 2025
+**Version:** 2.0.0<br>
+**Date:** December 09, 2025<br>
 **SPDX-License-Identifier:** BSD-3-Clause<br>
 **License File:** See the LICENSE file in the project root<br>
-**Copyright:** 2025 Michael Gardner, A Bit of Help, Inc.<br>
+**Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>
 **Status:** Released
 
 ---
@@ -15,9 +15,11 @@
 - [First Program](#first-program)
 - [Working with Person Values](#working-with-person-values)
 - [Error Handling](#error-handling)
+- [Running Example Programs](#running-example-programs)
 - [Running Tests](#running-tests)
 - [Build Profiles](#build-profiles)
 - [Common Issues](#common-issues)
+- [Next Steps](#next-steps)
 
 ---
 
@@ -191,6 +193,67 @@ end if;
 
 ---
 
+## Running Example Programs
+
+Hybrid_Lib_Ada includes runnable example programs in the `examples/` directory:
+
+### Basic Greeting Example
+
+Demonstrates simple library usage with a valid name:
+
+```bash
+./bin/basic_greeting
+```
+
+**Expected Output:**
+
+```text
+=== Basic Greeting Example ===
+
+Hello, World!
+Greeting executed successfully!
+
+=== End Example ===
+```
+
+### Error Handling Example
+
+Demonstrates Result monad error handling with validation errors:
+
+```bash
+./bin/error_handling
+```
+
+**Expected Output:**
+
+```text
+=== Error Handling Example ===
+
+Test 1: Valid name 'Alice'
+Hello, Alice!
+  Result: OK - Greeting printed
+
+Test 2: Empty name ''
+  Result: ERROR - VALIDATION_ERROR: Name cannot be empty
+
+Test 3: Name too long (150 chars)
+  Result: ERROR - VALIDATION_ERROR: Name too long (max 100 characters)
+
+=== End Example ===
+```
+
+**Building Examples:**
+
+```bash
+# Build all examples
+alr build
+
+# Examples are output to ./bin/
+ls -l bin/
+```
+
+---
+
 ## Running Tests
 
 ### All Tests
@@ -222,7 +285,24 @@ make test-integration
 
 ########################################
 ###    UNIT TESTS: SUCCESS            ###
-###    All 88 tests passed!           ###
+###    All 99 tests passed!           ###
+########################################
+
+========================================
+  HYBRID_LIB_ADA INTEGRATION TEST SUITE
+========================================
+
+[PASS] Greet use case with console writer - success
+...
+
+########################################
+###  INTEGRATION TESTS: SUCCESS      ###
+###    All 10 tests passed!          ###
+########################################
+
+########################################
+###   ALL TEST SUITES: SUCCESS      ###
+###   All tests passed!              ###
 ########################################
 ```
 
@@ -285,5 +365,5 @@ cd test && alr build
 
 ---
 
-**License:** BSD-3-Clause
-**Copyright:** 2025 Michael Gardner, A Bit of Help, Inc.
+**License:** BSD-3-Clause<br>
+**Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.
