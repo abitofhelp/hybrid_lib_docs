@@ -13,7 +13,7 @@
 
 ### 1.1 Purpose
 
-This Software Requirements Specification (SRS) defines the functional and non-functional requirements for **Hybrid_Lib_Ada**, a canonical Ada 2022 library demonstrating hexagonal architecture patterns with functional error handling.
+This Software Requirements Specification (SRS) defines the functional and non-functional requirements for **Hybrid_Lib_Ada**, a canonical Ada 2022 library demonstrating hybrid DDD/Clean/Hexagonal architecture with functional error handling.
 
 ### 1.2 Scope
 
@@ -105,7 +105,7 @@ Hybrid_Lib_Ada is a standalone library designed to be imported by Ada applicatio
 | Constraint | Rationale |
 |------------|-----------|
 | Ada 2022 | Required for modern language features |
-| GNAT 14+ | Required compiler version |
+| GNAT 13+ | Required compiler version |
 | No Heap Allocation | Embedded system compatibility |
 | SPARK Subset | Formal verification capability |
 
@@ -278,6 +278,15 @@ Hybrid_Lib_Ada is a standalone library designed to be imported by Ada applicatio
 | Infrastructure | Off | I/O operations |
 | API | Off | Facade over infrastructure |
 
+### 4.8 Testability (NFR-08)
+
+| ID | Requirement |
+|----|-------------|
+| NFR-08.1 | Unit tests for all domain packages |
+| NFR-08.2 | Integration tests for cross-layer interactions |
+| NFR-08.3 | Mock adapters for testing without I/O |
+| NFR-08.4 | Test runners with pass/fail reporting |
+
 ---
 
 ## 5. System Requirements
@@ -369,12 +378,13 @@ See Section 1.3 Definitions and Acronyms.
 
 | Metric | Value |
 |--------|-------|
-| Ada specification files | 16 |
-| Ada implementation files | 16 |
+| Ada specification files | 25 |
+| Ada implementation files | 18 |
 | Architecture layers | 4 (Domain, Application, Infrastructure, API) |
 | Unit tests | 99 |
 | Integration tests | 10 |
 | Example programs | 2 (basic_greeting, error_handling) |
+| Total tests | 109 |
 
 ---
 
@@ -387,5 +397,5 @@ See Section 1.3 Definitions and Acronyms.
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 2.0.0 | 2025-12-09 | Michael Gardner | Updated for v2.0.0: added examples, updated test counts (99+10), new Error_Kind values |
-| 1.0.0 | 2025-12-08 | Michael Gardner | Aligned with tzif SRS structure; added NFR-06, NFR-07 |
+| 2.0.0 | 2025-12-09 | Michael Gardner | Complete regeneration for v2.0.0; corrected Error_Kind values (5 not 6); added NFR-08 Testability; updated test counts |
+| 1.0.0 | 2025-12-08 | Michael Gardner | Initial release |

@@ -1,4 +1,4 @@
-# Software Test Guide
+# Software Test Guide (STG)
 
 **Version:** 2.0.0<br>
 **Date:** December 09, 2025<br>
@@ -23,6 +23,7 @@ This document covers:
 - Test execution procedures
 - Test framework usage
 - Adding new tests
+- Example programs
 
 ### 1.3 References
 
@@ -32,7 +33,7 @@ This document covers:
 
 ---
 
-## 2. Test Architecture
+## 2. Test Strategy
 
 ### 2.1 Test Categories
 
@@ -43,7 +44,19 @@ This document covers:
 | Example Programs | `examples/` | Runnable demonstrations of library usage | 2 |
 | **Total** | | | **109** |
 
-### 2.2 Directory Structure
+### 2.2 Testing Philosophy
+
+- **Result Monad Testing**: All error paths tested via Result inspection
+- **Mock-Based Isolation**: Infrastructure mocked for unit tests
+- **No Exceptions**: Tests verify no exceptions raised
+- **Deterministic**: Same inputs always produce same outputs
+- **Full Coverage**: All public APIs tested
+
+---
+
+## 3. Test Organization
+
+### 3.1 Directory Structure
 
 ```
 test/
@@ -74,7 +87,16 @@ test/
     └── test_arch_guard_ada.py
 ```
 
-### 2.3 Test GPR Projects
+### 3.2 Naming Conventions
+
+| Element | Convention | Example |
+|---------|------------|---------|
+| Test file | `test_<layer>_<package>.adb` | `test_domain_person.adb` |
+| Test name | Descriptive, action-result | "Create valid name - Is_Ok" |
+| Mock prefix | `Mock_` | `Mock_Writer_Success` |
+| Runner | `<category>_runner.adb` | `unit_runner.adb` |
+
+### 3.3 GPR Projects
 
 Tests use `hybrid_lib_ada_internal.gpr` which provides unrestricted access to all packages (no Library_Interface restrictions):
 
@@ -102,145 +124,17 @@ end Unit_Tests;
 
 ---
 
-## 3. Unit Tests
+## 4. Test Framework
 
-### 3.1 Domain Layer Tests
+### 4.1 Framework Overview
 
-#### 3.1.1 test_domain_error_result.adb
+The shared test framework (`test/common/test_framework.ads`) provides:
+- Test result tracking
+- Category summaries
+- Grand total reporting
+- Color-coded output
 
-**Package Under Test:** `Domain.Error.Result`
-
-| Test | Description |
-|------|-------------|
-| Ok construction - Is_Ok returns true | Verify Ok result returns true for Is_Ok |
-| Ok construction - Is_Error returns false | Verify Ok result returns false for Is_Error |
-| Ok value extraction - correct value | Verify Value returns the wrapped value |
-| Error construction - Is_Error returns true | Verify Error result returns true for Is_Error |
-| Error info - correct kind | Verify Error_Info returns correct Error_Kind |
-| Error info - correct message | Verify Error_Info returns correct message |
-| Boolean Result - correct value | Verify Result[Boolean] works correctly |
-| Multiple Ok values | Verify multiple Result instances are independent |
-| Multiple errors | Verify multiple Error results are independent |
-| Long error message | Verify long messages are stored correctly |
-
-**Total:** 19 tests
-
-#### 3.1.2 test_domain_person.adb
-
-**Package Under Test:** `Domain.Value_Object.Person`
-
-| Test | Description |
-|------|-------------|
-| Create valid name - Is_Ok | Valid name creates Ok result |
-| Create valid name - Get_Name correct | Name round-trips correctly |
-| Create empty name - Is_Error | Empty name returns Error |
-| Create empty name - Validation_Error | Error kind is Validation_Error |
-| Create name too long - Is_Error | Overlong name returns Error |
-| Create name at max length - Is_Ok | Max length name succeeds |
-| Create single char name - Is_Ok | Single character name succeeds |
-| Create name with spaces - Is_Ok | Names with spaces succeed |
-| Create name with special chars | Special characters preserved |
-| Create with Unicode | Unicode characters preserved |
-| Is_Valid_Person | Validation function works |
-| Multiple instances | Instances are independent |
-
-**Total:** 22 tests
-
-### 3.2 Application Layer Tests
-
-#### 3.2.1 test_application_command_greet.adb
-
-**Package Under Test:** `Application.Command.Greet`
-
-| Test | Description |
-|------|-------------|
-| Create simple name | Name stored correctly |
-| Create name with spaces | Spaces preserved |
-| Create single char | Single character works |
-| Create max length name | Max length handled |
-| Create with special chars | Special characters preserved |
-| Create with Unicode | Unicode preserved |
-| Multiple commands | Commands are independent |
-| Round-trip test | Create → Get_Name preserves value |
-
-**Total:** 13 tests
-
-#### 3.2.2 test_application_usecase_greet.adb
-
-**Package Under Test:** `Application.Usecase.Greet`
-
-Uses **mock writer** for isolation:
-- `Mock_Writer_Success` - Always succeeds, captures message
-- `Mock_Writer_Failure` - Always returns IO_Error
-
-| Test | Description |
-|------|-------------|
-| Execute valid name - Is_Ok | Valid name succeeds |
-| Execute valid name - message written | Correct message output |
-| Execute different names | Multiple names work |
-| Execute with writer failure | Writer error propagates |
-| Execute with special chars | Special characters preserved |
-| Execute with Unicode | Unicode preserved |
-| Execute with max length | Max length handled |
-| Multiple executions | State resets between calls |
-
-**Total:** 20 tests
-
-### 3.3 API Layer Tests
-
-#### 3.3.1 test_api_operations.adb
-
-**Package Under Test:** `Hybrid_Lib_Ada.API.Operations`
-
-Uses **mock writer** for isolation, testing the SPARK-safe generic:
-
-| Test | Description |
-|------|-------------|
-| Greet 'Alice' - Is_Ok | Valid name succeeds |
-| Greet 'Alice' - Writer called once | Writer invoked exactly once |
-| Greet 'Alice' - Message correct | Output is "Hello, Alice!" |
-| Greet 'Bob' - correct message | Different names work |
-| Greet 'Jane Doe' - spaces | Names with spaces work |
-| Greet special chars | Special characters preserved |
-| Greet with failing writer | Writer error propagates |
-| Greet with failing writer - IO_Error | Error kind correct |
-| Multiple calls | Call count tracked |
-| Multiple calls - last message | Latest message captured |
-
-**Total:** 14 tests
-
----
-
-## 4. Integration Tests
-
-### 4.1 test_api_greet.adb
-
-**Packages Under Test:** Full stack through `Hybrid_Lib_Ada.API`
-
-Tests the complete flow: API facade → API.Desktop → API.Operations → Application.Usecase → Domain, with real Console_Writer adapter.
-
-| Test | Description |
-|------|-------------|
-| API.Greet valid name - Is_Ok | Full stack succeeds |
-| API.Greet 'Bob' - Is_Ok | Different name works |
-| API.Greet 'Jane Doe' - Is_Ok | Spaces preserved |
-| API.Greet special chars - Is_Ok | Special characters work |
-| API.Greet Unicode - Is_Ok | Unicode preserved |
-| Create_Greet_Command round-trip | Command creation works |
-| Create_Person valid - Is_Ok | Person creation works |
-| Create_Person round-trip | Name round-trips |
-| Create_Person empty - Is_Error | Validation fails for empty |
-| Create_Person empty - Validation_Error | Correct error kind |
-
-**Total:** 10 tests
-
----
-
-## 5. Test Framework
-
-### 5.1 Test_Framework Package
-
-The shared test framework provides:
+### 4.2 API
 
 ```ada
 package Test_Framework is
@@ -264,9 +158,7 @@ package Test_Framework is
 end Test_Framework;
 ```
 
-### 5.2 Test Pattern
-
-Each test file follows this pattern:
+### 4.3 Usage Pattern
 
 ```ada
 procedure Test_My_Package is
@@ -298,9 +190,165 @@ begin
 end Test_My_Package;
 ```
 
-### 5.3 Mock Writer Pattern
+---
 
-For testing with mock infrastructure:
+## 5. Test Execution
+
+### 5.1 Running All Tests
+
+```bash
+make test-all
+```
+
+### 5.2 Running Specific Suites
+
+```bash
+# Unit tests only
+make test-unit
+
+# Integration tests only
+make test-integration
+```
+
+### 5.3 Expected Output
+
+```
+========================================
+     HYBRID_LIB_ADA UNIT TEST SUITE
+========================================
+
+========================================
+Testing: Domain.Error.Result
+========================================
+
+[PASS] Ok construction - Is_Ok returns true
+[PASS] Ok construction - Is_Error returns false
+...
+
+========================================
+        GRAND TOTAL - ALL UNIT TESTS
+========================================
+Total tests:   99
+Passed:        99
+Failed:        0
+
+########################################
+###                                  ###
+###    UNIT TESTS: SUCCESS           ###
+###    All  99 tests passed!         ###
+###                                  ###
+########################################
+```
+
+---
+
+## 6. Test Details
+
+### 6.1 Unit Tests
+
+#### 6.1.1 Domain Layer Tests
+
+**test_domain_error_result.adb** (19 tests)
+- Package Under Test: `Domain.Error.Result`
+- Tests Ok/Error construction, value extraction, multiple instances
+
+**test_domain_person.adb** (22 tests)
+- Package Under Test: `Domain.Value_Object.Person`
+- Tests valid names, empty names, too-long names, special characters, Unicode
+
+**test_domain_option.adb** (11 tests)
+- Package Under Test: `Domain.Value_Object.Option`
+- Tests Some/None construction, value extraction, Or_Else
+
+#### 6.1.2 Application Layer Tests
+
+**test_application_command_greet.adb** (13 tests)
+- Package Under Test: `Application.Command.Greet`
+- Tests command creation, name storage, round-trip
+
+**test_application_usecase_greet.adb** (20 tests)
+- Package Under Test: `Application.Usecase.Greet`
+- Uses mock writer for isolation
+- Tests valid execution, error propagation, writer failures
+
+#### 6.1.3 API Layer Tests
+
+**test_api_operations.adb** (14 tests)
+- Package Under Test: `Hybrid_Lib_Ada.API.Operations`
+- Uses mock writer
+- Tests SPARK-safe generic instantiation
+
+### 6.2 Integration Tests
+
+**test_api_greet.adb** (10 tests)
+- Tests full stack through `Hybrid_Lib_Ada.API`
+- Uses real Console_Writer adapter
+- Tests complete workflow end-to-end
+
+### 6.3 Example Programs
+
+See Section 9 for example program details.
+
+---
+
+## 7. Writing New Tests
+
+### 7.1 Template
+
+```ada
+pragma Ada_2022;
+--  ======================================================================
+--  Test_My_Package
+--  ======================================================================
+--  Copyright (c) 2025 Michael Gardner, A Bit of Help, Inc.
+--  SPDX-License-Identifier: BSD-3-Clause
+--  Purpose:
+--    Tests for My.Package functionality.
+--  ======================================================================
+
+with Ada.Text_IO; use Ada.Text_IO;
+with Test_Framework;
+with My.Package;
+
+procedure Test_My_Package is
+   Total_Tests  : Natural := 0;
+   Passed_Tests : Natural := 0;
+
+   procedure Run_Test (Name : String; Passed : Boolean) is
+   begin
+      Total_Tests := Total_Tests + 1;
+      if Passed then
+         Passed_Tests := Passed_Tests + 1;
+         Put_Line ("[PASS] " & Name);
+      else
+         Put_Line ("[FAIL] " & Name);
+      end if;
+   end Run_Test;
+
+begin
+   Put_Line ("========================================");
+   Put_Line ("Testing: My.Package");
+   Put_Line ("========================================");
+
+   --  Test cases here
+   Run_Test ("Feature works", My.Package.Feature = Expected);
+
+   --  Register results
+   Test_Framework.Register_Results (Total_Tests, Passed_Tests);
+end Test_My_Package;
+```
+
+### 7.2 Adding to GPR
+
+```ada
+--  test/unit/unit_tests.gpr
+for Main use
+  ("unit_runner.adb",
+   ...
+   "test_my_package.adb");  -- Add here
+```
+
+### 7.3 Mock Patterns
 
 ```ada
 --  State for mock
@@ -328,145 +376,7 @@ begin
    Write_Call_Count := 0;
    Mock_Should_Fail := False;
 end Reset_Mock;
-
---  Instantiate with mock
-package Test_Ops is new Application.Usecase.Greet
-  (Writer => Mock_Writer);
 ```
-
----
-
-## 6. Test Execution
-
-### 6.1 Build Tests
-
-```bash
-# Build all tests
-make build-tests
-
-# Or manually:
-alr exec -- gprbuild -P test/unit/unit_tests.gpr
-alr exec -- gprbuild -P test/integration/integration_tests.gpr
-```
-
-### 6.2 Run All Tests
-
-```bash
-# Run all tests via Make
-make test-all
-
-# Or run individually:
-./test/bin/unit_runner
-./test/bin/integration_runner
-```
-
-### 6.3 Run Individual Test Files
-
-```bash
-# Run specific test
-./test/bin/test_domain_person
-./test/bin/test_api_operations
-```
-
-### 6.4 Expected Output
-
-```
-========================================
-     HYBRID_LIB_ADA UNIT TEST SUITE
-========================================
-
-========================================
-Testing: Domain.Error.Result
-========================================
-
-[PASS] Ok construction - Is_Ok returns true
-[PASS] Ok construction - Is_Error returns false
-...
-
-========================================
-        GRAND TOTAL - ALL UNIT TESTS
-========================================
-Total tests:   88
-Passed:        88
-Failed:        0
-
-########################################
-###                                  ###
-###    UNIT TESTS: SUCCESS           ###
-###    All  88 tests passed!         ###
-###                                  ###
-########################################
-```
-
-### 6.5 Exit Codes
-
-| Code | Meaning |
-|------|---------|
-| 0 | All tests passed |
-| 1 | One or more tests failed |
-
----
-
-## 7. Adding New Tests
-
-### 7.1 Adding a Unit Test
-
-1. **Create test file:**
-
-```bash
-touch test/unit/test_my_package.adb
-```
-
-2. **Add to GPR project:**
-
-```ada
---  test/unit/unit_tests.gpr
-for Main use
-  ("unit_runner.adb",
-   ...
-   "test_my_package.adb");  -- Add here
-```
-
-3. **Add to runner:**
-
-```ada
---  test/unit/unit_runner.adb
-
-with Test_My_Package;  -- Add import
-
-...
-
-Test_My_Package;  -- Add call
-```
-
-4. **Implement test:**
-
-```ada
-procedure Test_My_Package is
-   ...
-begin
-   Run_Test ("My test", Expected = Actual);
-   Test_Framework.Register_Results (Total, Passed);
-end Test_My_Package;
-```
-
-5. **Build and run:**
-
-```bash
-alr exec -- gprbuild -P test/unit/unit_tests.gpr
-./test/bin/unit_runner
-```
-
-### 7.2 Adding an Integration Test
-
-Same process but use:
-- `test/integration/` directory
-- `integration_tests.gpr` project
-- `integration_runner.adb` runner
-
-### 7.3 Testing with Custom Writers
-
-See [All About Our API - Testing with Mock Composition Root](../guides/all_about_our_api.md#testing-with-mock-composition-root) for detailed examples.
 
 ---
 
@@ -476,22 +386,21 @@ See [All About Our API - Testing with Mock Composition Root](../guides/all_about
 
 | Requirement | Test File | Tests |
 |-------------|-----------|-------|
-| REQ-DOM-001 (Person) | test_domain_person.adb | 22 |
-| REQ-DOM-002 (Error) | test_domain_error_result.adb | 19 |
-| REQ-DOM-003 (Result) | test_domain_error_result.adb | 19 |
-| REQ-APP-001 (Command) | test_application_command_greet.adb | 13 |
-| REQ-APP-002 (Use Case) | test_application_usecase_greet.adb | 20 |
-| REQ-APP-003 (Port) | test_application_usecase_greet.adb | 20 |
-| REQ-INF-001 (Adapter) | test_api_greet.adb | 10 |
-| REQ-API-001 (Facade) | test_api_greet.adb | 10 |
-| REQ-API-002 (Operations) | test_api_operations.adb | 14 |
-| REQ-API-003 (Composition) | test_api_greet.adb | 10 |
+| FR-01.1 (Person) | test_domain_person.adb | 22 |
+| FR-01.4 (Error) | test_domain_error_result.adb | 19 |
+| FR-01.5 (Result) | test_domain_error_result.adb | 19 |
+| FR-02.1 (Command) | test_application_command_greet.adb | 13 |
+| FR-02.2 (Use Case) | test_application_usecase_greet.adb | 20 |
+| FR-02.3 (Port) | test_application_usecase_greet.adb | 20 |
+| FR-03.1 (Adapter) | test_api_greet.adb | 10 |
+| FR-04.1 (Facade) | test_api_greet.adb | 10 |
+| FR-04.4 (Operations) | test_api_operations.adb | 14 |
 
 ### 8.2 Layer Coverage
 
 | Layer | Test Files | Tests |
 |-------|-----------|-------|
-| Domain | test_domain_*.adb | 41 |
+| Domain | test_domain_*.adb | 52 |
 | Application | test_application_*.adb | 33 |
 | API | test_api_*.adb | 24 |
 | **Total** | | **109** |
@@ -500,7 +409,7 @@ See [All About Our API - Testing with Mock Composition Root](../guides/all_about
 
 ## 9. Example Programs
 
-Hybrid_Lib_Ada includes runnable example programs in the `examples/` directory that demonstrate library usage. These are not tests but educational demonstrations.
+Hybrid_Lib_Ada includes runnable example programs in the `examples/` directory that demonstrate library usage.
 
 ### 9.1 Basic Greeting
 
@@ -510,12 +419,12 @@ Hybrid_Lib_Ada includes runnable example programs in the `examples/` directory t
 
 **Build:**
 ```bash
-alr build
+alr exec -- gprbuild -P examples/examples.gpr
 ```
 
 **Run:**
 ```bash
-./bin/basic_greeting
+./examples/bin/basic_greeting
 ```
 
 **Expected Output:**
@@ -534,14 +443,9 @@ Greeting executed successfully!
 
 **Purpose:** Demonstrates Result monad error handling with validation errors (empty name, name too long).
 
-**Build:**
-```bash
-alr build
-```
-
 **Run:**
 ```bash
-./bin/error_handling
+./examples/bin/error_handling
 ```
 
 **Expected Output:**
@@ -556,39 +460,62 @@ Test 2: Empty name ''
   Result: ERROR - VALIDATION_ERROR: Name cannot be empty
 
 Test 3: Name too long (150 chars)
-  Result: ERROR - VALIDATION_ERROR: Name too long (max 100 characters)
+  Result: ERROR - VALIDATION_ERROR: Name exceeds maximum length
 
 === End Example ===
 ```
 
 ### 9.3 Building Examples
 
-Examples are built automatically with the library using `hybrid_lib_ada_internal.gpr`:
+Examples are built via the `examples/examples.gpr` project:
 
 ```bash
-# Build all (library + tests + examples)
-alr build
+# Build examples
+alr exec -- gprbuild -P examples/examples.gpr
 
-# Examples output to ./bin/
-ls -l bin/basic_greeting bin/error_handling
+# Executables in examples/bin/
+ls examples/bin/
 ```
 
 ---
 
-## 10. Appendices
+## 10. Test Maintenance
 
-### A. Test Naming Conventions
+### 10.1 When to Update
 
-| Element | Convention | Example |
-|---------|------------|---------|
-| Test file | `test_<package>.adb` | `test_<layer>_<entity>.adb` |
-| Test name | Descriptive, action-result | "Create valid name - Is_Ok" |
-| Mock prefix | `Mock_` | `Mock_Writer_Success` |
-| Runner | `<category>_runner.adb` | `unit_runner.adb` |
+- New package added → Add corresponding test file
+- API changed → Update affected tests
+- Bug fixed → Add regression test
+- Error handling changed → Update error tests
+
+### 10.2 Quality Guidelines
+
+- Test names must be descriptive
+- One assertion per test preferred
+- Mock state reset between tests
+- No test interdependencies
+
+### 10.3 CI Integration
+
+Tests run automatically on:
+- Push to main branch
+- Pull request creation
+- Manual workflow dispatch
+
+---
+
+## 11. Appendices
+
+### A. Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | All tests passed |
+| 1 | One or more tests failed |
 
 ### B. Change History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 2.0.0 | 2025-12-09 | Michael Gardner | Updated for v2.0.0: added examples section, updated test counts (99+10), documented example programs |
+| 2.0.0 | 2025-12-09 | Michael Gardner | Complete regeneration for v2.0.0; updated test counts (99+10=109); added Section 9 Example Programs |
 | 1.0.0 | 2025-11-29 | Michael Gardner | Initial release |

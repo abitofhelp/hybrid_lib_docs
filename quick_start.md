@@ -48,7 +48,7 @@ alr build
 ### Prerequisites
 
 - **Alire** 2.0+ (Ada package manager)
-- **GNAT** 14+ (via Alire toolchain)
+- **GNAT** 13+ (via Alire toolchain)
 - **Make** (for convenience targets)
 
 #### Installing Alire
@@ -100,7 +100,7 @@ alr build
 
 **Expected Output:**
 
-```text
+```
 Hello, Alice!
 Greeting succeeded!
 ```
@@ -164,7 +164,7 @@ end if;
 ```ada
 Result : constant Person_Result.Result := Create_Person ("");
 
-if Unit_Result.Is_Error (Result) then
+if Person_Result.Is_Error (Result) then
    declare
       Info : constant Error_Type := Person_Result.Error_Info (Result);
    begin
@@ -197,17 +197,27 @@ end if;
 
 Hybrid_Lib_Ada includes runnable example programs in the `examples/` directory:
 
+### Building Examples
+
+```bash
+# Build examples
+alr exec -- gprbuild -P examples/examples.gpr
+
+# Executables output to examples/bin/
+ls examples/bin/
+```
+
 ### Basic Greeting Example
 
 Demonstrates simple library usage with a valid name:
 
 ```bash
-./bin/basic_greeting
+./examples/bin/basic_greeting
 ```
 
 **Expected Output:**
 
-```text
+```
 === Basic Greeting Example ===
 
 Hello, World!
@@ -221,12 +231,12 @@ Greeting executed successfully!
 Demonstrates Result monad error handling with validation errors:
 
 ```bash
-./bin/error_handling
+./examples/bin/error_handling
 ```
 
 **Expected Output:**
 
-```text
+```
 === Error Handling Example ===
 
 Test 1: Valid name 'Alice'
@@ -237,19 +247,9 @@ Test 2: Empty name ''
   Result: ERROR - VALIDATION_ERROR: Name cannot be empty
 
 Test 3: Name too long (150 chars)
-  Result: ERROR - VALIDATION_ERROR: Name too long (max 100 characters)
+  Result: ERROR - VALIDATION_ERROR: Name exceeds maximum length
 
 === End Example ===
-```
-
-**Building Examples:**
-
-```bash
-# Build all examples
-alr build
-
-# Examples are output to ./bin/
-ls -l bin/
 ```
 
 ---
@@ -274,7 +274,7 @@ make test-integration
 
 ### Expected Output
 
-```text
+```
 ========================================
      HYBRID_LIB_ADA UNIT TEST SUITE
 ========================================
@@ -343,15 +343,23 @@ alr update
 **A:** Build tests first:
 
 ```bash
-cd test && alr build
+make build-tests
 ```
 
 ### Q: Style warnings about line length
 
 **A:** The library uses strict style checking. These warnings are informational:
 
-```text
+```
 (style) this line is too long: 85 [-gnatyM]
+```
+
+### Q: Examples not building
+
+**A:** Build examples with the dedicated GPR:
+
+```bash
+alr exec -- gprbuild -P examples/examples.gpr
 ```
 
 ---
@@ -362,6 +370,7 @@ cd test && alr build
 - **[All About Our API](guides/all_about_our_api.md)** - Three-package API pattern
 - **[Error Handling Strategy](guides/error_handling_strategy.md)** - Deep dive into Result monad
 - **[Architecture Enforcement](guides/architecture_enforcement.md)** - Layer dependency rules
+- **[Software Test Guide](formal/software_test_guide.md)** - Comprehensive testing guide
 
 ---
 

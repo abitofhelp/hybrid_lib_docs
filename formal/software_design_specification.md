@@ -1,4 +1,4 @@
-# Software Design Specification
+# Software Design Specification (SDS)
 
 **Version:** 2.0.0<br>
 **Date:** December 09, 2025<br>
@@ -106,45 +106,53 @@ Hybrid_Lib_Ada uses a **4-layer library architecture** (Domain, Application, Inf
 ```
 src/
 ├── hybrid_lib_ada.ads              # Root package
+├── version/
+│   └── hybrid_lib_ada-version.ads  # Version information
 │
 ├── domain/
 │   ├── domain.ads                  # Domain layer root
+│   ├── domain-unit.ads             # Unit type (void equivalent)
 │   ├── error/
 │   │   ├── domain-error.ads        # Error type definition
-│   │   └── result/
-│   │       └── domain-error-result.ads  # Generic Result monad
-│   ├── unit/
-│   │   └── domain-unit.ads         # Unit type (void equivalent)
+│   │   └── domain-error-result.ads # Generic Result monad
 │   └── value_object/
-│       └── person/
-│           └── domain-value_object-person.ads
+│       ├── domain-value_object.ads
+│       ├── domain-value_object-option.ads
+│       └── domain-value_object-person.ads
 │
 ├── application/
 │   ├── application.ads             # Application layer root
+│   ├── error/
+│   │   └── application-error.ads   # Re-exports Domain.Error
 │   ├── command/
-│   │   └── greet/
-│   │       └── application-command-greet.ads
+│   │   ├── application-command.ads
+│   │   └── application-command-greet.ads
 │   ├── port/
+│   │   ├── application-port.ads
+│   │   ├── inbound/
+│   │   │   └── application-port-inbound.ads
 │   │   └── outbound/
-│   │       └── writer/
-│   │           └── application-port-outbound-writer.ads
+│   │       ├── application-port-outbound.ads
+│   │       └── application-port-outbound-writer.ads
 │   └── usecase/
-│       └── greet/
-│           └── application-usecase-greet.ads
+│       ├── application-usecase.ads
+│       └── application-usecase-greet.ads
 │
 ├── infrastructure/
 │   ├── infrastructure.ads          # Infrastructure layer root
 │   └── adapter/
-│       └── console_writer/
-│           └── infrastructure-adapter-console_writer.ads
+│       ├── infrastructure-adapter.ads
+│       └── infrastructure-adapter-console_writer.ads
 │
 └── api/
     ├── hybrid_lib_ada-api.ads      # Public facade
     ├── hybrid_lib_ada-api.adb
     ├── operations/
-    │   └── hybrid_lib_ada-api-operations.ads  # SPARK-safe
+    │   ├── hybrid_lib_ada-api-operations.ads  # SPARK-safe
+    │   └── hybrid_lib_ada-api-operations.adb
     └── desktop/
-        └── hybrid_lib_ada-api-desktop.ads     # Composition root
+        ├── hybrid_lib_ada-api-desktop.ads     # Composition root
+        └── hybrid_lib_ada-api-desktop.adb
 ```
 
 ### 3.2 Package Descriptions
@@ -154,9 +162,11 @@ src/
 | Package | Purpose | SPARK |
 |---------|---------|-------|
 | `Domain` | Layer root | On |
+| `Domain.Unit` | Unit type for void operations | On |
 | `Domain.Error` | Error type with Kind + Message | On |
 | `Domain.Error.Result` | Generic Result[T] monad | On |
-| `Domain.Unit` | Unit type for void operations | On |
+| `Domain.Value_Object` | Value object root | On |
+| `Domain.Value_Object.Option` | Option[T] monad | On |
 | `Domain.Value_Object.Person` | Person value object | On |
 
 #### 3.2.2 Application Layer
@@ -164,8 +174,14 @@ src/
 | Package | Purpose | SPARK |
 |---------|---------|-------|
 | `Application` | Layer root | On |
+| `Application.Error` | Re-exports Domain.Error | On |
+| `Application.Command` | Command root | On |
 | `Application.Command.Greet` | Greet command DTO | On |
+| `Application.Port` | Port root | On |
+| `Application.Port.Inbound` | Inbound port root | On |
+| `Application.Port.Outbound` | Outbound port root | On |
 | `Application.Port.Outbound.Writer` | Writer port definition | On |
+| `Application.Usecase` | Use case root | On |
 | `Application.Usecase.Greet` | Greet use case | On |
 
 #### 3.2.3 Infrastructure Layer
@@ -173,6 +189,7 @@ src/
 | Package | Purpose | SPARK |
 |---------|---------|-------|
 | `Infrastructure` | Layer root | Off |
+| `Infrastructure.Adapter` | Adapter root | Off |
 | `Infrastructure.Adapter.Console_Writer` | Console output adapter | Off |
 
 #### 3.2.4 API Layer
@@ -180,6 +197,7 @@ src/
 | Package | Purpose | SPARK |
 |---------|---------|-------|
 | `Hybrid_Lib_Ada` | Library root | Off |
+| `Hybrid_Lib_Ada.Version` | Version information | Off |
 | `Hybrid_Lib_Ada.API` | Public facade | Off |
 | `Hybrid_Lib_Ada.API.Operations` | SPARK-safe operations | On |
 | `Hybrid_Lib_Ada.API.Desktop` | Desktop composition root | Off |
@@ -194,12 +212,11 @@ src/
 
 ```ada
 type Error_Kind is
-  (Validation_Error,    -- Input validation failed
-   IO_Error,            -- I/O operation failed
-   Not_Found_Error,     -- Resource not found
-   Already_Exists_Error,-- Resource exists
-   Config_Error,        -- Configuration error
-   Internal_Error);     -- Unexpected internal error
+  (Validation_Error,  -- Input validation failed
+   Parse_Error,       -- Malformed data/parsing failures
+   Not_Found_Error,   -- Resource not found
+   IO_Error,          -- I/O operation failed
+   Internal_Error);   -- Unexpected internal error
 ```
 
 #### 4.1.2 Error_Type
@@ -207,7 +224,7 @@ type Error_Kind is
 ```ada
 type Error_Type is record
    Kind    : Error_Kind;
-   Message : Error_String;  -- Bounded string
+   Message : Error_Strings.Bounded_String;  -- Max 512 chars
 end record;
 ```
 
@@ -224,8 +241,10 @@ package Domain.Error.Result.Generic_Result is
 
    function Is_Ok (R : Result) return Boolean;
    function Is_Error (R : Result) return Boolean;
-   function Value (R : Result) return T;
-   function Error_Info (R : Result) return Error_Type;
+   function Value (R : Result) return T
+     with Pre => Is_Ok (R);
+   function Error_Info (R : Result) return Error_Type
+     with Pre => Is_Error (R);
 end Generic_Result;
 ```
 
@@ -269,13 +288,14 @@ All public types are re-exported from `Hybrid_Lib_Ada.API`:
 subtype Person_Type is Domain.Value_Object.Person.Person;
 subtype Greet_Command is Application.Command.Greet.Greet_Command;
 subtype Error_Type is Domain.Error.Error_Type;
+subtype Error_Kind is Domain.Error.Error_Kind;
 ```
 
 ---
 
-## 5. Static Dependency Injection
+## 5. Design Patterns
 
-### 5.1 Overview
+### 5.1 Static Dependency Injection
 
 Hybrid_Lib_Ada uses Ada generics for static (compile-time) dependency injection:
 
@@ -295,7 +315,7 @@ package Console_Ops is new Hybrid_Lib_Ada.API.Operations
   (Writer => Infrastructure.Adapter.Console_Writer.Write);
 ```
 
-### 5.2 Benefits
+**Benefits:**
 
 | Benefit | Description |
 |---------|-------------|
@@ -304,18 +324,7 @@ package Console_Ops is new Hybrid_Lib_Ada.API.Operations
 | Type safe | Compiler verifies contracts |
 | Testable | Mock writers for unit tests |
 
----
-
-## 6. Three-Package API Pattern
-
-### 6.1 Problem Statement
-
-How to provide:
-- SPARK-verifiable operations
-- Platform-specific wiring
-- Clean public facade
-
-### 6.2 Solution
+### 5.2 Three-Package API Pattern
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -349,41 +358,7 @@ How to provide:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 6.3 SPARK Verification Boundary
-
-| Package | SPARK_Mode | Reason |
-|---------|------------|--------|
-| API.Operations | On | Pure logic, verifiable |
-| API.Desktop | Off | I/O wiring |
-| API (facade) | Off | Delegates to Desktop |
-| Infrastructure.* | Off | I/O operations |
-| Application.* | On | Business logic |
-| Domain.* | On | Core domain |
-
-### 6.4 Platform-Specific Composition Roots
-
-`API.Desktop` is the default composition root for desktop/server environments. For other platforms (embedded, web, testing), create additional composition roots:
-
-| Platform | Composition Root | Writer Adapter |
-|----------|------------------|----------------|
-| Desktop | `API.Desktop` | Console_Writer |
-| Embedded | `API.Embedded` | UART_Writer, LCD_Writer |
-| Web | `API.Web` | DOM_Writer |
-| Testing | `API.Test` | Mock_Writer |
-
-Each composition root:
-1. Implements the same interface as `API.Desktop`
-2. Instantiates `API.Operations` with a platform-specific adapter
-3. Lives under `src/api/<platform>/`
-4. Is recognized by arch_guard as a composition root
-
-**For detailed instructions on creating platform-specific composition roots, including step-by-step examples for embedded systems (STM32F769I), GPR configuration, and troubleshooting, see [All About Our API](../guides/all_about_our_api.md#creating-platform-specific-composition-roots).**
-
----
-
-## 7. Error Handling Strategy
-
-### 7.1 Result Monad Pattern
+### 5.3 Result Monad Pattern
 
 All fallible operations return `Result[T]`:
 
@@ -395,7 +370,11 @@ function Greet (Cmd : Greet_Command) return Unit_Result.Result;
 --  Returns Ok(Unit) or Error(IO_Error, "message")
 ```
 
-### 7.2 Error Propagation
+---
+
+## 6. Error Handling Strategy
+
+### 6.1 Error Propagation
 
 Errors flow through use case orchestration:
 
@@ -414,7 +393,7 @@ begin
 end Execute;
 ```
 
-### 7.3 No Exceptions Policy
+### 6.2 No Exceptions Policy
 
 | Situation | Handling |
 |-----------|----------|
@@ -425,16 +404,16 @@ end Execute;
 
 ---
 
-## 8. Build Configuration
+## 7. Build Configuration
 
-### 8.1 GPR Projects
+### 7.1 GPR Projects
 
 | Project | Purpose |
 |---------|---------|
-| `hybrid_lib_ada.gpr` | Public library (restricted interfaces) |
-| `hybrid_lib_ada_internal.gpr` | Internal (unrestricted, for tests) |
+| `hybrid_lib_ada.gpr` | Public library (Library_Interface restricted) |
+| `hybrid_lib_ada_internal.gpr` | Internal (unrestricted, for tests/examples) |
 
-### 8.2 Build Profiles
+### 7.2 Build Profiles
 
 | Profile | Target | Features |
 |---------|--------|----------|
@@ -444,9 +423,9 @@ end Execute;
 
 ---
 
-## 9. Design Decisions
+## 8. Design Decisions
 
-### 9.1 API.Operations as Child vs Sibling
+### 8.1 API.Operations as Child vs Sibling
 
 **Decision:** `API.Operations` (child) instead of `API_Operations` (sibling)
 
@@ -455,7 +434,7 @@ end Execute;
 - SPARK works either way
 - Preelaborate adds minimal value for consumers
 
-### 9.2 No Heap Allocation
+### 8.2 No Heap Allocation
 
 **Decision:** All types use bounded strings and stack allocation
 
@@ -464,7 +443,7 @@ end Execute;
 - SPARK compatibility
 - Deterministic behavior
 
-### 9.3 Static vs Dynamic Polymorphism
+### 8.3 Static vs Dynamic Polymorphism
 
 **Decision:** Static polymorphism via generics
 
@@ -475,7 +454,7 @@ end Execute;
 
 ---
 
-## 10. Appendices
+## 9. Appendices
 
 ### A. Package Dependency Graph
 
@@ -496,5 +475,5 @@ Hybrid_Lib_Ada.API
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 2.0.0 | 2025-12-09 | Michael Gardner | Updated for v2.0.0: added examples, refactored Error_Kind enum, updated test counts |
+| 2.0.0 | 2025-12-09 | Michael Gardner | Complete regeneration for v2.0.0; corrected Error_Kind (5 values); updated package structure |
 | 1.0.0 | 2025-11-29 | Michael Gardner | Initial release |

@@ -11,7 +11,7 @@
 
 ## Overview
 
-Documentation for Hybrid_Lib_Ada - a professional Ada 2022 library demonstrating hybrid DDD/Clean/Hexagonal architecture with functional error handling.
+Documentation for **Hybrid_Lib_Ada** - a professional Ada 2022 library demonstrating hybrid DDD/Clean/Hexagonal architecture with functional error handling.
 
 **Key Capabilities:**
 
@@ -44,32 +44,41 @@ Documentation for Hybrid_Lib_Ada - a professional Ada 2022 library demonstrating
 - **[Architecture Enforcement](guides/architecture_enforcement.md)** - Layer dependency rules
 - **[Error Handling Strategy](guides/error_handling_strategy.md)** - Result monad patterns
 
+### Reference
+
+- **[CHANGELOG](../CHANGELOG.md)** - Release history
+- **[README](../README.md)** - Project overview
+
 ---
 
 ## Architecture
 
 Hybrid_Lib_Ada implements a 4-layer hexagonal architecture:
 
-```text
-+-----------------------------------------------------------------+
-|                          API Layer                               |
-|  Hybrid_Lib_Ada.API (facade) + API.Desktop + API.Operations    |
-+----------------------------------+------------------------------+
-                                   |
-+----------------------------------v------------------------------+
-|                      Application Layer                           |
-|  Use Cases (Greet) + Inbound/Outbound Ports + Commands          |
-+----------------------------------+------------------------------+
-                                   |
-+----------------------------------v------------------------------+
-|                    Infrastructure Layer                          |
-|  Adapters (Console_Writer) + Platform Implementations           |
-+----------------------------------+------------------------------+
-                                   |
-+----------------------------------v------------------------------+
-|                       Domain Layer                               |
-|  Value Objects (Person) + Result Monad + Error Types            |
-+-----------------------------------------------------------------+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                          API Layer                           │
+│  Hybrid_Lib_Ada.API (facade)                                │
+│  + API.Operations (SPARK-safe) + API.Desktop (composition)  │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│                   Infrastructure Layer                       │
+│  Adapters: Console_Writer                                   │
+│  Implements ports defined in Application layer              │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│                    Application Layer                         │
+│  Use Cases: Greet | Commands: Greet_Command                 │
+│  Ports: Writer (outbound)                                   │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│                      Domain Layer                            │
+│  Value Objects: Person, Option | Error: Result monad        │
+│  Pure business logic with zero dependencies                 │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 **Design Principles:**
@@ -90,6 +99,8 @@ Hybrid_Lib_Ada exposes operations through a three-package API pattern:
 | Operation | Description | Input | Output |
 |-----------|-------------|-------|--------|
 | `Greet` | Generate greeting for a person | `Greet_Command` | `Unit_Result.Result` |
+| `Create_Greet_Command` | Create a greet command | `String` | `Greet_Command` |
+| `Create_Person` | Create a validated person | `String` | `Person_Result.Result` |
 
 **Usage Example:**
 
@@ -103,6 +114,13 @@ procedure Example is
 begin
    if Unit_Result.Is_Ok (Result) then
       -- Success - greeting written to console
+   else
+      -- Error - inspect Error_Info
+      declare
+         Info : constant Error_Type := Unit_Result.Error_Info (Result);
+      begin
+         -- Handle error: Info.Kind, Info.Message
+      end;
    end if;
 end Example;
 ```
@@ -124,11 +142,43 @@ end Example;
 
 | Platform | Status | Notes |
 |----------|--------|-------|
-| **Linux** | Full | Primary development platform |
-| **macOS** | Full | Fully supported |
-| **BSD** | Full | Fully supported |
-| **Windows** | Full | Windows 11+ |
-| **Embedded** | Stub | Custom adapter required |
+| **Linux** | ✅ Full | Primary development platform |
+| **macOS** | ✅ Full | Fully supported |
+| **BSD** | ✅ Full | Fully supported |
+| **Windows** | ✅ Full | Windows 11+ (CI tested) |
+| **Embedded** | 🔧 Stub | Custom adapter required |
+
+---
+
+## Quick Example
+
+```ada
+with Hybrid_Lib_Ada.API; use Hybrid_Lib_Ada.API;
+with Ada.Text_IO;
+
+procedure Greet_Example is
+   Cmd : constant Greet_Command := Create_Greet_Command ("World");
+   Result : constant Unit_Result.Result := Greet (Cmd);
+begin
+   if Unit_Result.Is_Ok (Result) then
+      Ada.Text_IO.Put_Line ("Success!");
+   end if;
+end Greet_Example;
+```
+
+Output:
+```
+Hello, World!
+Success!
+```
+
+---
+
+## Dependencies
+
+| Dependency | Version | Purpose |
+|------------|---------|---------|
+| functional | ^3.0.0 | Result monad and Option types |
 
 ---
 
@@ -140,5 +190,5 @@ end Example;
 
 ---
 
-**License:** BSD-3-Clause
-**Copyright:** 2025 Michael Gardner, A Bit of Help, Inc.
+**License:** BSD-3-Clause<br>
+**Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.
