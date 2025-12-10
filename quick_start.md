@@ -1,11 +1,11 @@
 # Hybrid_Lib_Ada Quick Start Guide
 
-**Version:** 2.0.0<br>
-**Date:** December 09, 2025<br>
+**Version:** 2.0.0  
+**Date:** December 10, 2025  
 **SPDX-License-Identifier:** BSD-3-Clause<br>
 **License File:** See the LICENSE file in the project root<br>
-**Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>
-**Status:** Released
+**Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>  
+**Status:** Released  
 
 ---
 
@@ -386,5 +386,5 @@ alr exec -- gprbuild -P examples/examples.gpr
 
 ---
 
-**License:** BSD-3-Clause<br>
-**Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.
+**License:** BSD-3-Clause<br>  
+**Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.  
