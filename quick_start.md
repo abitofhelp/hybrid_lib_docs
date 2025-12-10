@@ -310,18 +310,30 @@ make test-integration
 
 ## Build Profiles
 
-The library supports multiple build profiles for different target environments:
+The library supports 6 build profiles for different target environments:
 
-| Profile | Use Case | RAM | Features |
-|---------|----------|-----|----------|
-| `standard` | Desktop/server | 1+ GB | Full features |
-| `embedded` | Ravenscar embedded | 512KB+ | Tasking safe |
-| `baremetal` | Zero footprint | 128KB+ | Minimal runtime |
+| Profile | Target Platform | RAM | String Limits | Contracts | Debug |
+|---------|-----------------|-----|---------------|-----------|-------|
+| `standard` | Desktop/Server | 1+ GB | 128/256/512 | Yes | Yes |
+| `concurrent` | Multi-threaded Server | 1+ GB | 128/256/512 | Yes | Yes |
+| `stm32mp135_linux` | STM32MP135F-DK (Linux MPU) | 512 MB | 128/256/512 | Yes | Yes |
+| `embedded` | Ravenscar Embedded | 512KB-1MB | 64/128/256 | Yes | No |
+| `stm32h7s78` | STM32H7S78-DK | 620KB+32MB | 64/128/256 | Yes | Yes |
+| `baremetal` | Zero Footprint (ZFP) | 128KB-256KB | 32/64/128 | No | No |
+
+**String Limits** are Max_Name_Length / Max_Message_Length / Max_Error_Length.
 
 ### Selecting a Profile
 
 ```bash
-alr build -- -XHYBRID_LIB_ADA_PROFILE=embedded
+# Standard profile (default)
+alr build
+
+# Embedded profile
+alr build -- -XHYBRID_LIB_PROFILE=embedded
+
+# STM32H7S78-DK profile
+alr build -- -XHYBRID_LIB_PROFILE=stm32h7s78
 ```
 
 See [Build Profiles](guides/build_profiles.md) for detailed configuration.
