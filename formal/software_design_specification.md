@@ -417,6 +417,156 @@ end Execute;
 | Unexpected error | Return Internal_Error result |
 | Programmer error | Assert/raise (debug only) |
 
+### 6.3 Exception Boundary Specification
+
+This section defines the mandatory rules for exception handling across all architectural layers.
+
+#### 6.3.1 Architecture and Exception Flow
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    OUTSIDE WORLD                        │
+│         (User CLI, Files, Network, OS, Hardware)        │
+└─────────────────────────────────────────────────────────┘
+                    ↓ input              ↑ output
+┌─────────────────────────────────────────────────────────┐
+│                   INFRASTRUCTURE                        │
+│              (Adapters, I/O, External)                  │
+│                                                         │
+│    External calls go out / responses come in            │
+│    ✅ Functional.Try.Try_To_Result REQUIRED             │
+│    ❌ Manual exception handlers FORBIDDEN               │
+│    Converts ALL exceptions → Result[T, Error]           │
+└─────────────────────────────────────────────────────────┘
+                    ↓                    ↑
+┌─────────────────────────────────────────────────────────┐
+│                    APPLICATION                          │
+│              (Use Cases, Orchestration)                 │
+│                                                         │
+│    ❌ exception keyword FORBIDDEN                       │
+│    Works with Result + Error ONLY                       │
+└─────────────────────────────────────────────────────────┘
+                    ↓                    ↑
+┌─────────────────────────────────────────────────────────┐
+│                      DOMAIN                             │
+│            (Entities, Value Objects, Logic)             │
+│                                                         │
+│    ❌ exception keyword FORBIDDEN                       │
+│    Works with Result + Error ONLY                       │
+│    Self-protecting types prevent invalid states         │
+└─────────────────────────────────────────────────────────┘
+                    ↓                    ↑
+┌─────────────────────────────────────────────────────────┐
+│                   API (Public Facade)                   │
+│                                                         │
+│    ❌ exception keyword FORBIDDEN                       │
+│    Returns Result types to consumers                    │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### 6.3.2 Exception Handling Rules by Layer
+
+| Layer | Location | `Functional.Try` | Manual `exception` | Rationale |
+|-------|----------|------------------|-------------------|-----------|
+| **Infrastructure** | `src/infrastructure/**` | **REQUIRED** | **FORBIDDEN** | Boundary to external world; must convert exceptions |
+| **Domain** | `src/domain/**` | N/A | **FORBIDDEN** | Core logic; Result types only |
+| **Application** | `src/application/**` | N/A | **FORBIDDEN** | Orchestration; Result types only |
+| **API** | `src/api/**` | N/A | **FORBIDDEN** | Public facade; Result types only |
+| **Test** | `test/**` | Optional | **ALLOWED** | Tests may verify exception scenarios |
+
+#### 6.3.3 Required Pattern: Functional.Try at Boundaries
+
+All Infrastructure adapters that perform I/O or call external APIs **MUST** use `Functional.Try.Try_To_Result` or `Functional.Try.Try_To_Result_With_Param`:
+
+```ada
+with Functional.Try;
+with Ada.Exceptions;
+
+package body Infrastructure.Adapter.Console_Writer is
+   use Ada.Exceptions;
+
+   --  Step 1: Inner function that may raise exceptions
+   function Write_Action (Message : String) return Unit is
+   begin
+      Ada.Text_IO.Put_Line (Message);  -- May raise IO exceptions
+      return Unit_Value;
+   end Write_Action;
+
+   --  Step 2: Exception mapper converts to domain error
+   function Map_Exception
+     (Exc : Exception_Occurrence) return Domain.Error.Error_Type
+   is
+   begin
+      return Domain.Error.Create
+        (Kind    => Domain.Error.IO_Error,
+         Message => "Console write failed: " & Exception_Name (Exc));
+   end Map_Exception;
+
+   --  Step 3: Instantiate Functional.Try wrapper
+   function Write_With_Try is new
+     Functional.Try.Try_To_Result_With_Param
+       (T             => Unit,
+        E             => Domain.Error.Error_Type,
+        Param         => String,
+        Result_Pkg    => Unit_Functional_Result,
+        Map_Exception => Map_Exception,
+        Action        => Write_Action);
+
+   --  Step 4: Public function uses the safe wrapper
+   function Write (Message : String) return Unit_Result.Result is
+   begin
+      return To_Domain_Result (Write_With_Try (Message));
+   end Write;
+
+end Infrastructure.Adapter.Console_Writer;
+```
+
+#### 6.3.4 Prohibited Pattern: Manual Exception Handlers
+
+The following pattern is **FORBIDDEN** in Infrastructure (and all other layers):
+
+```ada
+--  ❌ PROHIBITED: Manual exception handling
+function Write (Message : String) return Unit_Result.Result is
+begin
+   Ada.Text_IO.Put_Line (Message);
+   return Unit_Result.Ok (Unit_Value);
+exception
+   when E : others =>
+      return Unit_Result.Error
+        (IO_Error, "Write failed: " & Exception_Message (E));
+end Write;
+```
+
+**Why prohibited:**
+- Inconsistent error mapping across codebase
+- Easy to forget exception handlers
+- No single point of control for exception conversion
+- Violates separation of concerns (I/O action vs error handling)
+- Harder to audit and verify
+
+#### 6.3.5 Core Layer Exception Philosophy
+
+If an exception occurs in Domain, Application, or API layers, it indicates a **BUG**, not a runtime condition to handle:
+
+- **Type definition is wrong** (constraint too narrow)
+- **Validation is missing** at the boundary
+- **Logic error** in the code
+- **SPARK contracts incomplete** (if using SPARK)
+
+Such exceptions should **crash loudly** so the bug can be found and fixed (or proven away with SPARK).
+
+#### 6.3.6 Validation Enforcement
+
+The release preparation script validates these rules:
+
+1. **Infrastructure layer**: Must have `with Functional.Try;` if any I/O operations exist
+2. **Infrastructure layer**: Must NOT have manual `exception` handlers
+3. **Domain/Application/API layers**: Must NOT have `exception` keyword at all
+4. **Test layer**: Exempt from validation
+
+Violations cause the release preparation to fail.
+
 ---
 
 ## 7. Build Configuration
@@ -490,5 +640,6 @@ Hybrid_Lib_Ada.API
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 2.0.1 | 2025-12-11 | Michael Gardner | Added Section 6.3 Exception Boundary Specification with architecture diagram, layer rules, required/prohibited patterns |
 | 2.0.0 | 2025-12-09 | Michael Gardner | Complete regeneration for v2.0.0; corrected Error_Kind (5 values); updated package structure |
 | 1.0.0 | 2025-11-29 | Michael Gardner | Initial release |
