@@ -1,7 +1,7 @@
 # Software Requirements Specification (SRS)
 
-**Version:** 2.0.0  
-**Date:** December 10, 2025  
+**Version:** 2.1.0
+**Date:** December 14, 2025  
 **SPDX-License-Identifier:** BSD-3-Clause<br>
 **License File:** See the LICENSE file in the project root<br>
 **Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>  
@@ -374,28 +374,17 @@ None specified - library is hardware-agnostic.
 
 See Section 1.3 Definitions and Acronyms.
 
-### 8.2 Project Statistics
-
-| Metric | Value |
-|--------|-------|
-| Ada specification files | 25 |
-| Ada implementation files | 18 |
-| Architecture layers | 4 (Domain, Application, Infrastructure, API) |
-| Unit tests | 99 |
-| Integration tests | 10 |
-| Example programs | 2 (basic_greeting, error_handling) |
-| Total tests | 109 |
-
 ---
 
 **Document Control:**
-- Version: 2.0.0
-- Last Updated: December 09, 2025
+- Version: 2.1.0
+- Last Updated: December 14, 2025
 - Status: Released
 
 **Change History:**
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 2.0.0 | 2025-12-09 | Michael Gardner | Complete regeneration for v2.0.0; corrected Error_Kind values (5 not 6); added NFR-08 Testability; updated test counts |
+| 2.1.0 | 2025-12-14 | Michael Gardner | Remove Section 8.2 Project Statistics (metrics belong in CHANGELOG) |
+| 2.0.0 | 2025-12-09 | Michael Gardner | Complete regeneration for v2.0.0; corrected Error_Kind values (5 not 6); added NFR-08 Testability |
 | 1.0.0 | 2025-12-08 | Michael Gardner | Initial release |

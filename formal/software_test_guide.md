@@ -1,7 +1,7 @@
 # Software Test Guide (STG)
 
-**Version:** 2.0.0  
-**Date:** December 10, 2025  
+**Version:** 2.1.0
+**Date:** December 14, 2025  
 **SPDX-License-Identifier:** BSD-3-Clause<br>
 **License File:** See the LICENSE file in the project root<br>
 **Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>  
@@ -37,12 +37,13 @@ This document covers:
 
 ### 2.1 Test Categories
 
-| Category | Location | Purpose | Count |
-|----------|----------|---------|-------|
-| Unit Tests | `test/unit/` | Test individual packages in isolation | 99 |
-| Integration Tests | `test/integration/` | Test cross-layer interactions | 10 |
-| Example Programs | `examples/` | Runnable demonstrations of library usage | 2 |
-| **Total** | | | **109** |
+| Category | Location | Purpose |
+|----------|----------|---------|
+| Unit Tests | `test/unit/` | Test individual packages in isolation |
+| Integration Tests | `test/integration/` | Test cross-layer interactions |
+| Example Programs | `examples/` | Runnable demonstrations of library usage |
+
+See CHANGELOG for current test counts per release.
 
 ### 2.2 Testing Philosophy
 
@@ -228,17 +229,19 @@ Testing: Domain.Error.Result
 ========================================
         GRAND TOTAL - ALL UNIT TESTS
 ========================================
-Total tests:   99
-Passed:        99
+Total tests:   [N]
+Passed:        [N]
 Failed:        0
 
 ########################################
 ###                                  ###
 ###    UNIT TESTS: SUCCESS           ###
-###    All  99 tests passed!         ###
+###    All [N] tests passed!         ###
 ###                                  ###
 ########################################
 ```
+
+*Note: [N] represents the current test count. See CHANGELOG for actual values.*
 
 ---
 
@@ -248,39 +251,39 @@ Failed:        0
 
 #### 6.1.1 Domain Layer Tests
 
-**test_domain_error_result.adb** (19 tests)
+**test_domain_error_result.adb**
 - Package Under Test: `Domain.Error.Result`
 - Tests Ok/Error construction, value extraction, multiple instances
 
-**test_domain_person.adb** (22 tests)
+**test_domain_person.adb**
 - Package Under Test: `Domain.Value_Object.Person`
 - Tests valid names, empty names, too-long names, special characters, Unicode
 
-**test_domain_option.adb** (11 tests)
+**test_domain_option.adb**
 - Package Under Test: `Domain.Value_Object.Option`
 - Tests Some/None construction, value extraction, Or_Else
 
 #### 6.1.2 Application Layer Tests
 
-**test_application_command_greet.adb** (13 tests)
+**test_application_command_greet.adb**
 - Package Under Test: `Application.Command.Greet`
 - Tests command creation, name storage, round-trip
 
-**test_application_usecase_greet.adb** (20 tests)
+**test_application_usecase_greet.adb**
 - Package Under Test: `Application.Usecase.Greet`
 - Uses mock writer for isolation
 - Tests valid execution, error propagation, writer failures
 
 #### 6.1.3 API Layer Tests
 
-**test_api_operations.adb** (14 tests)
+**test_api_operations.adb**
 - Package Under Test: `Hybrid_Lib_Ada.API.Operations`
 - Uses mock writer
 - Tests SPARK-safe generic instantiation
 
 ### 6.2 Integration Tests
 
-**test_api_greet.adb** (10 tests)
+**test_api_greet.adb**
 - Tests full stack through `Hybrid_Lib_Ada.API`
 - Uses real Console_Writer adapter
 - Tests complete workflow end-to-end
@@ -384,26 +387,27 @@ end Reset_Mock;
 
 ### 8.1 Requirements to Tests
 
-| Requirement | Test File | Tests |
-|-------------|-----------|-------|
-| FR-01.1 (Person) | test_domain_person.adb | 22 |
-| FR-01.4 (Error) | test_domain_error_result.adb | 19 |
-| FR-01.5 (Result) | test_domain_error_result.adb | 19 |
-| FR-02.1 (Command) | test_application_command_greet.adb | 13 |
-| FR-02.2 (Use Case) | test_application_usecase_greet.adb | 20 |
-| FR-02.3 (Port) | test_application_usecase_greet.adb | 20 |
-| FR-03.1 (Adapter) | test_api_greet.adb | 10 |
-| FR-04.1 (Facade) | test_api_greet.adb | 10 |
-| FR-04.4 (Operations) | test_api_operations.adb | 14 |
+| Requirement | Test File |
+|-------------|-----------|
+| FR-01.1 (Person) | test_domain_person.adb |
+| FR-01.4 (Error) | test_domain_error_result.adb |
+| FR-01.5 (Result) | test_domain_error_result.adb |
+| FR-02.1 (Command) | test_application_command_greet.adb |
+| FR-02.2 (Use Case) | test_application_usecase_greet.adb |
+| FR-02.3 (Port) | test_application_usecase_greet.adb |
+| FR-03.1 (Adapter) | test_api_greet.adb |
+| FR-04.1 (Facade) | test_api_greet.adb |
+| FR-04.4 (Operations) | test_api_operations.adb |
 
 ### 8.2 Layer Coverage
 
-| Layer | Test Files | Tests |
-|-------|-----------|-------|
-| Domain | test_domain_*.adb | 52 |
-| Application | test_application_*.adb | 33 |
-| API | test_api_*.adb | 24 |
-| **Total** | | **109** |
+| Layer | Test Files |
+|-------|-----------|
+| Domain | test_domain_*.adb |
+| Application | test_application_*.adb |
+| API | test_api_*.adb |
+
+See CHANGELOG for current test counts per layer and total.
 
 ---
 
@@ -517,5 +521,6 @@ Tests run automatically on:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 2.0.0 | 2025-12-09 | Michael Gardner | Complete regeneration for v2.0.0; updated test counts (99+10=109); added Section 9 Example Programs |
+| 2.1.0 | 2025-12-14 | Michael Gardner | Remove hardcoded metrics per documentation standards; metrics now in CHANGELOG |
+| 2.0.0 | 2025-12-09 | Michael Gardner | Complete regeneration for v2.0.0; added Section 9 Example Programs |
 | 1.0.0 | 2025-11-29 | Michael Gardner | Initial release |
