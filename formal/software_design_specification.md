@@ -434,7 +434,7 @@ This section defines the mandatory rules for exception handling across all archi
 │              (Adapters, I/O, External)                  │
 │                                                         │
 │    External calls go out / responses come in            │
-│    ✅ Functional.Try.Try_To_Result REQUIRED             │
+│    ✅ Functional.Try.Map_To_Result REQUIRED             │
 │    ❌ Manual exception handlers FORBIDDEN               │
 │    Converts ALL exceptions → Result[T, Error]           │
 └─────────────────────────────────────────────────────────┘
@@ -476,46 +476,45 @@ This section defines the mandatory rules for exception handling across all archi
 
 #### 6.3.3 Required Pattern: Functional.Try at Boundaries
 
-All Infrastructure adapters that perform I/O or call external APIs **MUST** use `Functional.Try.Try_To_Result` or `Functional.Try.Try_To_Result_With_Param`:
+All Infrastructure adapters that perform I/O or call external APIs **MUST** use `Functional.Try.Map_To_Result` or `Functional.Try.Map_To_Result_With_Param`:
 
 ```ada
-with Functional.Try;
-with Ada.Exceptions;
+with Functional.Try.Map_To_Result_With_Param;
+with Ada.IO_Exceptions;
 
 package body Infrastructure.Adapter.Console_Writer is
-   use Ada.Exceptions;
 
    --  Step 1: Inner function that may raise exceptions
-   function Write_Action (Message : String) return Unit is
+   function Write_Action (Message : String) return Unit_Result.Result is
    begin
       Ada.Text_IO.Put_Line (Message);  -- May raise IO exceptions
-      return Unit_Value;
+      return Unit_Result.Ok (Unit_Value);
    end Write_Action;
 
-   --  Step 2: Exception mapper converts to domain error
-   function Map_Exception
-     (Exc : Exception_Occurrence) return Domain.Error.Error_Type
-   is
+   --  Step 2: Error factory converts kind + message to domain error
+   function Make_Error (Kind : Error_Kind; Message : String)
+     return Unit_Result.Result is
    begin
-      return Domain.Error.Create
-        (Kind    => Domain.Error.IO_Error,
-         Message => "Console write failed: " & Exception_Name (Exc));
-   end Map_Exception;
+      return Unit_Result.Error (Kind, Message);
+   end Make_Error;
 
-   --  Step 3: Instantiate Functional.Try wrapper
-   function Write_With_Try is new
-     Functional.Try.Try_To_Result_With_Param
-       (T             => Unit,
-        E             => Domain.Error.Error_Type,
-        Param         => String,
-        Result_Pkg    => Unit_Functional_Result,
-        Map_Exception => Map_Exception,
-        Action        => Write_Action);
+   --  Step 3: Instantiate Functional.Try.Map_To_Result_With_Param
+   package Try_Write is new Functional.Try.Map_To_Result_With_Param
+     (Error_Kind_Type    => Domain.Error.Error_Kind,
+      Param_Type         => String,
+      Result_Type        => Unit_Result.Result,
+      Make_Error         => Make_Error,
+      Default_Error_Kind => Internal_Error,
+      Action             => Write_Action);
 
-   --  Step 4: Public function uses the safe wrapper
+   --  Step 4: Declarative exception mappings
+   Mappings : constant Try_Write.Mapping_Array :=
+     [(Ada.IO_Exceptions.Device_Error'Identity, IO_Error)];
+
+   --  Step 5: Public function uses the safe wrapper
    function Write (Message : String) return Unit_Result.Result is
    begin
-      return To_Domain_Result (Write_With_Try (Message));
+      return Try_Write.Run (Message, Mappings);
    end Write;
 
 end Infrastructure.Adapter.Console_Writer;

@@ -347,34 +347,43 @@ return Error(Not_Found_Error,
 
 ### Converting Exceptions to Results
 
-**Infrastructure layer** catches external exceptions and converts to Result:
+**Infrastructure layer** catches external exceptions and converts to Result using `Functional.Try.Map_To_Result`:
 
 ```ada
-with Functional.Try;
+with Functional.Try.Map_To_Result_With_Param;
+with Ada.IO_Exceptions;
 
-function Read_File (Path : String) return Result is
-   package Try_Read is new Functional.Try.Try_With_Return
-     (Return_Type => File_Contents);
-
-   function Do_Read return File_Contents is
-   begin
-      -- May raise Ada.IO_Exceptions.Name_Error, etc.
-      return Read_File_Contents(Path);
-   end Do_Read;
-
-   Try_Result : constant Try_Read.Result := Try_Read.Try_To_Result(Do_Read'Access);
+--  Step 1: Inner function that may raise
+function Raw_Read (Path : String) return Read_Result.Result is
 begin
-   if Try_Read.Is_Ok(Try_Result) then
-      return Ok(Try_Read.Value(Try_Result));
-   else
-      Exception_Info : constant Try_Read.Exception_Info :=
-        Try_Read.Exception_Info(Try_Result);
+   return Read_Result.Ok (Read_File_Contents (Path));
+end Raw_Read;
 
-      -- Convert exception to domain error
-      return Error(IO_Error,
-                   "Failed to read file: " & Path &
-                   " - " & Exception_Info.Message);
-   end if;
+--  Step 2: Error factory
+function Make_Error (Kind : Error_Kind; Message : String)
+  return Read_Result.Result is
+begin
+   return Read_Result.Error (Kind, Message);
+end Make_Error;
+
+--  Step 3: Instantiate Map_To_Result
+package Try_Read is new Functional.Try.Map_To_Result_With_Param
+  (Error_Kind_Type    => Domain.Error.Error_Kind,
+   Param_Type         => String,
+   Result_Type        => Read_Result.Result,
+   Make_Error         => Make_Error,
+   Default_Error_Kind => Internal_Error,
+   Action             => Raw_Read);
+
+--  Step 4: Declarative exception mappings
+Mappings : constant Try_Read.Mapping_Array :=
+  [(Ada.IO_Exceptions.Name_Error'Identity, Not_Found_Error),
+   (Ada.IO_Exceptions.Use_Error'Identity,  IO_Error)];
+
+--  Step 5: Public function uses safe wrapper
+function Read_File (Path : String) return Read_Result.Result is
+begin
+   return Try_Read.Run (Path, Mappings);
 end Read_File;
 ```
 
@@ -385,7 +394,7 @@ end Read_File;
 3. **Infrastructure Layer**:
    - May catch external exceptions
    - MUST convert to Result before returning to application layer
-   - Use `Functional.Try` for exception boundaries
+   - Use `Functional.Try.Map_To_Result` for exception boundaries
 
 ---
 
