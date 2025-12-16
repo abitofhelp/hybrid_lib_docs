@@ -1,7 +1,7 @@
 # Build Profiles
 
 **Version:** 2.0.0  
-**Date:** December 10, 2025  
+**Date:** 2025-12-10  
 **SPDX-License-Identifier:** BSD-3-Clause<br>
 **License File:** See the LICENSE file in the project root<br>
 **Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>  

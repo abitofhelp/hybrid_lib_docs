@@ -1,7 +1,7 @@
 # Software Test Guide (STG)
 
 **Version:** 2.1.0
-**Date:** December 14, 2025  
+**Date:** 2025-12-14  
 **SPDX-License-Identifier:** BSD-3-Clause<br>
 **License File:** See the LICENSE file in the project root<br>
 **Copyright:** © 2025 Michael Gardner, A Bit of Help, Inc.<br>  
