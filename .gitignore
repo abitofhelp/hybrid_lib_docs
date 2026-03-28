@@ -43,3 +43,5 @@ $RECYCLE.BIN/
 .vscode/
 .idea/
 *.sublime-workspace
+*.tar.gz
+*.tgz
